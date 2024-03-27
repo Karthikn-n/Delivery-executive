@@ -35,7 +35,7 @@ class _MapScreenState extends State<MapScreen> {
   Position? _currentLocation;
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
-  String key = 'AIzaSyDbZcQiUQy-YyCN08yz8OQxQd4z4eRmMqA';
+  String key = '';
   DateTime selectedDateTime = DateTime.now();
 
   List<LatLng> waypoints = const [
