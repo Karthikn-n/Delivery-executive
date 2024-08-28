@@ -39,7 +39,7 @@ class _DeliverylistWidgetState extends State<DeliverylistWidget> {
                   )
                 ],
               );
-            }else if(snapshot.hasError || !snapshot.hasData){
+            }else if(snapshot.hasError ){
               return const Center(
                 child: TextWidget(text: "No Delivery list", fontWeight: FontWeight.w500, fontSize: 15),
               );

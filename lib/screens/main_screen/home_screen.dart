@@ -5,7 +5,6 @@ import 'package:app_5/screens/main_screen/apply_leave_screen.dart';
 import 'package:app_5/helper/navigation_helper.dart';
 import 'package:app_5/widgets/common_widgets/button.dart';
 import 'package:app_5/widgets/main_screen_widgets/sku_pickuplist_widget.dart';
-import 'package:app_5/screens/main_screen/sigin_page.dart';
 import 'package:app_5/widgets/common_widgets/text_widget.dart';
 import 'package:app_5/widgets/main_screen_widgets/customer_address_widget.dart';
 import 'package:app_5/widgets/main_screen_widgets/deliverylist_widget.dart';
@@ -98,10 +97,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       PopupMenuItem(
                         child: const TextWidget(text: 'Logout', fontWeight: FontWeight.w500, fontSize: 13),
-                        onTap: () async {
-                          await prefs.clear();
-                          provider.clearUserSession();
-                          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const LoginPage(),), (route)=> false);
+                        onTap: () {
+                          provider.confirmLogout(context, size);
+                          
                         }
                       ),
                     ];

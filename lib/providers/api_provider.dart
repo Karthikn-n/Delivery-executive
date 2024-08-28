@@ -12,8 +12,10 @@ import 'package:app_5/model/sku_additional_pickup_model.dart';
 import 'package:app_5/model/sku_products_list_model.dart';
 import 'package:app_5/repository/app_repository.dart';
 import 'package:app_5/screens/main_screen/home_screen.dart';
+import 'package:app_5/screens/main_screen/sigin_page.dart';
 import 'package:app_5/service/api_service.dart';
 import 'package:app_5/widgets/common_widgets/snackbar_message.dart';
+import 'package:app_5/widgets/common_widgets/text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -229,16 +231,23 @@ class ApiProvider extends ChangeNotifier{
       message: decodedReponse['message'], 
       backgroundColor: Theme.of(context).primaryColor,
       bottomPadding: size.height * 0.12,
-      sidePadding: size.width * 0.1
+      sidePadding: size.width * 0.85
     );
     if (response.statusCode == 200 && decodedReponse['status'] == "success") {
-      additonalSkuQuantities.clear();
-      additionalProductQuantities.clear();
-      orderedProductsAdditionalQuantities.clear();
-      ScaffoldMessenger.of(context).showSnackBar(pickupMessage);
+      ScaffoldMessenger.of(context).showSnackBar(pickupMessage).closed.then((value) {
+        for (var i = 0; i < skuPickList.length; i++) {
+          additonalSkuQuantities.addAll({skuPickList[i].productId: 0});
+        }
+        for (var i = 0; i < allProducts.length; i++) {
+          additionalProductQuantities.addAll({allProducts[i].id: 0});
+        }
+        orderedProductsAdditionalQuantities = List.generate(orderedProducts.length, (index) => orderedProductsAdditionalQuantities[index] = 0,);
+        notifyListeners();
+      },);
     } else {
       print('Add Pickup list Error: $decodedReponse');
     }
+    notifyListeners();
   }
 
   // Leave history API
@@ -380,7 +389,7 @@ class ApiProvider extends ChangeNotifier{
   }
 
 
-  void clearUserSession(){
+  void clearUserSession(BuildContext context){
     additionalProductQuantities.clear();
     additonalSkuQuantities.clear();
     additionalPickupData.clear();
@@ -394,6 +403,198 @@ class ApiProvider extends ChangeNotifier{
     editedEndDate.clear();
     editedStartDate.clear();
     commentsController.clear();
+    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const LoginPage(),), (route)=> false);
     notifyListeners();
+  }
+
+  // confirm logout
+  void confirmLogout(BuildContext context, Size size){
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0), // Set your desired border radius
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            // padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            height: 180,
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: TextWidget(text: "Logout", fontSize: 20, fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(height: 16,),
+                      Center(
+                        child: Text(
+                           "Do you want logout?",
+                           textAlign: TextAlign.center,
+                           style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w400
+                           ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 40,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero
+                      ),
+                      backgroundColor: Colors.transparent.withOpacity(0.0),
+                      shadowColor: Colors.transparent.withOpacity(0.0),
+                      elevation: 0,
+                      overlayColor: Colors.transparent.withOpacity(0.1)
+                    ),
+                    onPressed: () async{
+                      Navigator.pop(context);
+                      // Clear User identity
+                      await prefs.clear();
+                      print("${prefs.getString("customerId")}");
+                      clearUserSession(context);
+                    }, 
+                    child: const TextWidget(
+                      text: "Confirm", 
+                      fontSize: 14, fontWeight: FontWeight.w400, 
+                      fontColor: Colors.red,)
+                  )
+                ),
+                SizedBox(
+                  height: 40,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent.withOpacity(0.0),
+                      shadowColor: Colors.transparent.withOpacity(0.0),
+                      elevation: 0,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero
+                      ),
+                      overlayColor: Colors.transparent.withOpacity(0.1)
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    }, 
+                    child: const TextWidget(text: "Cancel", fontSize: 14, fontWeight: FontWeight.w400, fontColor: Colors.grey,)
+                  ),
+                ),
+                const SizedBox(height: 10,)
+              ],
+            ),
+          )
+        );
+      },
+    );
+  
+  }
+
+
+  // Confirm Delete Leave
+  void confirmDeleteLeave(BuildContext context, Size size, int leaveId, int index){
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0), // Set your desired border radius
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            // padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            height: 180,
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: TextWidget(text: "Delete Leave", fontSize: 20, fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(height: 16,),
+                      Center(
+                        child: Text(
+                           "Do you want delete this leave?",
+                           textAlign: TextAlign.center,
+                           style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w400
+                           ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 40,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero
+                      ),
+                      backgroundColor: Colors.transparent.withOpacity(0.0),
+                      shadowColor: Colors.transparent.withOpacity(0.0),
+                      elevation: 0,
+                      overlayColor: Colors.transparent.withOpacity(0.1)
+                    ),
+                    onPressed: () async{
+                      Navigator.pop(context);
+                      await deleteLeave(leaveId, size, index, context);
+                      
+                    }, 
+                    child: const TextWidget(
+                      text: "Confirm", 
+                      fontSize: 14, fontWeight: FontWeight.w400, 
+                      fontColor: Colors.red,)
+                  )
+                ),
+                SizedBox(
+                  height: 40,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent.withOpacity(0.0),
+                      shadowColor: Colors.transparent.withOpacity(0.0),
+                      elevation: 0,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero
+                      ),
+                      overlayColor: Colors.transparent.withOpacity(0.1)
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    }, 
+                    child: const TextWidget(text: "Cancel", fontSize: 14, fontWeight: FontWeight.w400, fontColor: Colors.grey,)
+                  ),
+                ),
+                const SizedBox(height: 10,)
+              ],
+            ),
+          )
+        );
+      },
+    );
+  
   }
 }

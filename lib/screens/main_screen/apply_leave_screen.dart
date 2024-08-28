@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:app_5/encrypt_decrypt.dart';
 import 'package:app_5/helper/sharedPreference_helper.dart';
 import 'package:app_5/providers/api_provider.dart';
+import 'package:app_5/providers/connectivity_helper.dart';
 import 'package:app_5/repository/app_repository.dart';
 import 'package:app_5/screens/sub_screen/leave_history.dart';
 import 'package:app_5/service/api_service.dart';
@@ -65,15 +66,13 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
           // Leave History 
           Padding(
             padding: EdgeInsets.fromLTRB(0, 0, size.width * 0.05, 0),
-            child: Consumer<ApiProvider>(
-              builder: (context, provider, child) {
+            child: Consumer2<ApiProvider, ConnectivityService>(
+              builder: (context, provider, connection, child) {
                 return GestureDetector(
                   onTap: () async {
-                    provider.leavesListAPI(context).then((value) {
-                      Navigator.push(context, MaterialPageRoute(
-                        builder: (context) => const LeaveHistoryScreen(),
-                      ));
-                    },);
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => const LeaveHistoryScreen(),
+                    ));
                   },
                   child: const Tooltip(
                     message: 'History',
@@ -184,55 +183,70 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                   child: SizedBox(
                     height: size.height * 0.06,
                     width: size.width * 0.8,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        elevation: 0,
-                        shadowColor: Colors.white,
-                        overlayColor: Colors.white54,
-                        backgroundColor: const Color(0xFF60B47B),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        )
-                      ),
-                      onPressed: () async {
-                        if (formKey.currentState!.validate()) {
-                          Map<String, dynamic> applyLeaveData = {
-                            "delivery_executive_id": prefs.getString("executiveId"),
-                            "start_date": startDateController.text,
-                            "end_date": endDateController.text,
-                            "comments": commentsController.text
-                          };
-          
-                          final response = await leaveRepository.applyLeave(applyLeaveData);
-                          final decryptedResponse = decryptAES(response.body).replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), "");
-                          final decodedResponse = json.decode(decryptedResponse);
-                          print('Apply Leave Response: $decodedResponse, Status Code: ${response.statusCode}');
-                          final applyLeaveMessage = snackBarMessage(
-                            context: context, 
-                            message: decodedResponse['message'], 
-                            backgroundColor: const Color(0xFF60B47B), 
-                            sidePadding: size.width * 0.1, 
-                            bottomPadding: size.height * 0.85
-                          );
-                          if (response.statusCode == 200) {
-                            ScaffoldMessenger.of(context).showSnackBar(applyLeaveMessage).closed.then((value) {
-                              startDateController.clear();
-                              endDateController.clear();
-                              commentsController.clear();
-                            },);
-                          }else{
-                            print('Error: $decodedResponse');
-                          }
-                        }
-                      }, 
-                      child: const Text(
-                        'Apply',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white
-                        ),
-                      )
+                    child: Consumer2<ApiProvider, ConnectivityService>(
+                        builder: (context, provider, connection, child) {
+                        return ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                            shadowColor: Colors.white,
+                            overlayColor: Colors.white54,
+                            backgroundColor: const Color(0xFF60B47B),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          ),
+                          onPressed: () async {
+                            if (connection.isConnected) {
+                              if (formKey.currentState!.validate()) {
+                                Map<String, dynamic> applyLeaveData = {
+                                  "delivery_executive_id": prefs.getString("executiveId"),
+                                  "start_date": startDateController.text,
+                                  "end_date": endDateController.text,
+                                  "comments": commentsController.text
+                                };
+                                    
+                                final response = await leaveRepository.applyLeave(applyLeaveData);
+                                final decryptedResponse = decryptAES(response.body).replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), "");
+                                final decodedResponse = json.decode(decryptedResponse);
+                                print('Apply Leave Response: $decodedResponse, Status Code: ${response.statusCode}');
+                                final applyLeaveMessage = snackBarMessage(
+                                  context: context, 
+                                  message: decodedResponse['message'], 
+                                  backgroundColor: const Color(0xFF60B47B), 
+                                  sidePadding: size.width * 0.1, 
+                                  bottomPadding: size.height * 0.85
+                                );
+                                if (response.statusCode == 200) {
+                                  ScaffoldMessenger.of(context).showSnackBar(applyLeaveMessage).closed.then((value) async {
+                                    startDateController.clear();
+                                    endDateController.clear();
+                                    commentsController.clear();
+                                    provider.leavesListAPI(context);
+                                  },);
+                                }else{
+                                  print('Error: $decodedResponse');
+                                }
+                              }
+                            }else{
+                              ScaffoldMessenger.of(context).showSnackBar(snackBarMessage(
+                                  context: context, 
+                                message: "No internet!", 
+                                backgroundColor: const Color(0xFF60B47B), 
+                                sidePadding: size.width * 0.1, 
+                                bottomPadding: size.height * 0.85
+                              ));
+                            }
+                          }, 
+                          child: const Text(
+                            'Apply',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white
+                            ),
+                          )
+                        );
+                      }
                     ),
                   ),
                 )
