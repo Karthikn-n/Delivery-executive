@@ -30,7 +30,7 @@ class SkuPickuplistWidget extends StatelessWidget {
                       )
                     ],
                   );
-                }else if(!snapshot.hasData){
+                }else if(!snapshot.hasData || snapshot.hasError){
                   return const Center(
                     child: TextWidget(text: "No products in inventry ", fontWeight: FontWeight.w500, fontSize: 15),
                   );

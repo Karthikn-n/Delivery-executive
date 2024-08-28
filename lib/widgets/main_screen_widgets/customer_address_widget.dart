@@ -33,7 +33,7 @@ class _CustomerAddressWidgetState extends State<CustomerAddressWidget> {
                     )
                   ],
                 );
-              }else if(snapshot.hasError){
+              }else if(!snapshot.hasData || snapshot.hasError){
                 return const Center(
                   child: TextWidget(text: "No Customer list", fontWeight: FontWeight.w500, fontSize: 15),
                 );

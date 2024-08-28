@@ -369,6 +369,7 @@ class ApiProvider extends ChangeNotifier{
     }else{ 
       print('Error in customer Location $decodedResponse');
     }
+    notifyListeners();
   }
 
  
@@ -386,12 +387,19 @@ class ApiProvider extends ChangeNotifier{
       addressList.clear();
       addressList = responseList.map((json) => CustomerAddress.fromJson(json)).toList();
     }
+    notifyListeners();
   }
 
 
   void clearUserSession(BuildContext context){
-    additionalProductQuantities.clear();
-    additonalSkuQuantities.clear();
+     for (var i = 0; i < skuPickList.length; i++) {
+      additonalSkuQuantities.addAll({skuPickList[i].productId: 0});
+    }
+    for (var i = 0; i < allProducts.length; i++) {
+      additionalProductQuantities.addAll({allProducts[i].id: 0});
+    }
+    orderedProductsAdditionalQuantities = List.generate(orderedProducts.length, (index) => orderedProductsAdditionalQuantities[index] = 0,);
+        
     additionalPickupData.clear();
     addressList.clear();
     customerOrderProducts.clear();
