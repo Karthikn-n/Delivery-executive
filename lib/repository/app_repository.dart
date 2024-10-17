@@ -10,6 +10,10 @@ class AppRepository{
   Future<http.Response> login(Map<String, dynamic> body) async
     => await apiService.post('/deliveryexecutivelogin', body);
 
+  // Login 
+  Future<http.Response> forgetPassword(Map<String, dynamic> body) async
+    => await apiService.post('/update-password', body);
+
   // Executive Profile
   Future<http.Response> executiveProfile(Map<String, dynamic> body) async
     => await apiService.post('/deliveryexecutiveprofile', body);

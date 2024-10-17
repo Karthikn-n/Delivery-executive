@@ -22,7 +22,7 @@ SnackBar snackBarMessage({
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
-      margin: EdgeInsets.only(left: sidePadding ?? size.width * 0.1, right: sidePadding ?? size.width * 0.1, bottom: bottomPadding ?? size.height * 0.85),
+      margin: EdgeInsets.only(left: sidePadding ?? size.width * 0.1, right: sidePadding ?? size.width * 0.1, bottom: bottomPadding ?? size.height * 0.05),
       content: Center(
         child: TextWidget(
           text: message, 

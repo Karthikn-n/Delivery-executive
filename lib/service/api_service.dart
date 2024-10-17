@@ -14,6 +14,7 @@ class ApiService{
   // POST Method
   Future<http.Response> post(String endpoint, Map<String, dynamic> body) async {
     final encodeBody = json.encode(body);
+    print("$baseUrl$endpoint");
     print('Json Body: $encodeBody');
     final encryptedBody = encryptAES(encodeBody);
     print('Encrypted Data: data: $encryptedBody');

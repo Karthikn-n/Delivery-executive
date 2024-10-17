@@ -70,9 +70,11 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
               builder: (context, provider, connection, child) {
                 return GestureDetector(
                   onTap: () async {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) => const LeaveHistoryScreen(),
-                    ));
+                    await provider.leavesListAPI(context).then((value) {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (context) => const LeaveHistoryScreen(),
+                      ));
+                    },);
                   },
                   child: const Tooltip(
                     message: 'History',
@@ -111,7 +113,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                     );
                     setState(() {
                       if (startTime != null) {
-                        startDateController.text = DateFormat("yyyy-MM-dd").format(startTime);
+                        startDateController.text = DateFormat("dd-MM-yyyy").format(startTime);
                       }else{
                         startDateController.text = "";
                       }
@@ -138,20 +140,32 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                   readOnly: true,
                   hintText: 'End date',
                   onTap: () async {
-                    DateTime? endDate = await showDatePicker(
-                      context: context, 
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2100),
-                      initialDate: DateTime.now(),
-                    );
-                    setState(() {
-                      if (endDate != null) {
-                        endDateController.text = DateFormat("yyyy-MM-dd").format(endDate);
-                      }else{
-                        endDateController.text = "";
-                      }
-                    });
-                    print('End Date: ${endDateController.text}');
+                    if (startDateController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        snackBarMessage(
+                          context: context, 
+                          message: "Select Start date first", 
+                          backgroundColor: Theme.of(context).primaryColor,
+                          bottomPadding: size.height * 0.05,
+                          sidePadding: size.width * 0.1
+                        )
+                      );
+                    }else{
+                      DateTime? endDate = await showDatePicker(
+                        context: context, 
+                        firstDate: DateFormat("dd-MM-yyyy").parse(startDateController.text),
+                        lastDate: DateTime(2100),
+                        initialDate: DateFormat("dd-MM-yyyy").parse(startDateController.text),
+                      );
+                      setState(() {
+                        if (endDate != null) {
+                          endDateController.text = DateFormat("dd-MM-yyyy").format(endDate);
+                        }else{
+                          endDateController.text = "";
+                        }
+                      });
+                      print('End Date: ${endDateController.text}');
+                    }
                   },
                   validator: (value) {
                     if (value == "" && value!.isEmpty) {
@@ -214,7 +228,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                                   message: decodedResponse['message'], 
                                   backgroundColor: const Color(0xFF60B47B), 
                                   sidePadding: size.width * 0.1, 
-                                  bottomPadding: size.height * 0.85
+                                  bottomPadding: size.height * 0.05
                                 );
                                 if (response.statusCode == 200) {
                                   ScaffoldMessenger.of(context).showSnackBar(applyLeaveMessage).closed.then((value) async {
@@ -233,7 +247,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                                 message: "No internet!", 
                                 backgroundColor: const Color(0xFF60B47B), 
                                 sidePadding: size.width * 0.1, 
-                                bottomPadding: size.height * 0.85
+                                bottomPadding: size.height * 0.05
                               ));
                             }
                           }, 

@@ -76,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       )
     : Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
           backgroundColor: Colors.white,
@@ -298,22 +299,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   SizedBox(
                     height:  size.height * 0.6,
                     child: TabBarView(
-                      key: const PageStorageKey('tab'),
                       controller: _tabController,
                       children: [
                         // Pick up list Screen
                         SizedBox(
                           height: size.height * 0.4,
-                          child: SkuPickuplistWidget(
-                            key: const PageStorageKey('sku'),
-                          ),
+                          child: SkuPickuplistWidget(),
                         ),
                         // Delivery List Screen
-                        const DeliverylistWidget(
-                          key: PageStorageKey('delivery'),
-                        ),
+                        const DeliverylistWidget(),
                         // Update Location Screen
-                        const CustomerAddressWidget(key: PageStorageKey('address'),)
+                        const CustomerAddressWidget()
                       ]
                     ),
                   )

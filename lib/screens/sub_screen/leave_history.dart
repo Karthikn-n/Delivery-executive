@@ -1,9 +1,12 @@
 import 'package:app_5/providers/api_provider.dart';
+import 'package:app_5/widgets/common_widgets/text_field_widget.dart';
 import 'package:app_5/widgets/common_widgets/text_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
+import '../../widgets/common_widgets/button.dart';
 
 class LeaveHistoryScreen extends StatelessWidget {
   const LeaveHistoryScreen({super.key});
@@ -19,7 +22,7 @@ class LeaveHistoryScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text("Applied Leaves"),
-          automaticallyImplyLeading: false,
+          // automaticallyImplyLeading: false,
           leading: IconButton(
             style: const ButtonStyle(
               overlayColor: WidgetStatePropertyAll(Colors.black12)
@@ -72,15 +75,13 @@ class LeaveHistoryScreen extends StatelessWidget {
           child: ListView.builder(
             itemCount: provider.leavesList.length,
             itemBuilder: (context, index) {
-              int differnece = DateTime.parse(provider.editedEndDate[index].isNotEmpty ? provider.editedEndDate[index] : provider.leavesList[index].endDate).difference(DateTime.parse(provider.editedStartDate[index].isNotEmpty ? provider.editedStartDate[index] : provider.leavesList[index].startDate)).inDays;
-              String startDate = DateFormat("dd MMM ''yy").format(DateTime.parse(provider.editedStartDate[index].isNotEmpty ? provider.editedStartDate[index] : provider.leavesList[index].startDate));
-              String endDate = DateFormat("dd MMM ''yy").format(DateTime.parse(provider.editedEndDate[index].isNotEmpty ? provider.editedEndDate[index] :provider.leavesList[index].endDate));
+              // int differnece = DateTime.parse( provider.leavesList[index].endDate).difference(DateTime.parse(provider.leavesList[index].startDate)).inDays;
+              String startDate = DateFormat("dd MMM yyyy").format(DateTime.parse(provider.leavesList[index].startDate));
+              String endDate = DateFormat("dd MMM yyyy").format(DateTime.parse(provider.leavesList[index].endDate));
+              int difference = DateFormat("dd MMM yyyy").parse(endDate).difference(DateFormat("dd MMM yyyy").parse(startDate)).inDays;
               return Column(
                 children: [
                   Container(
-                    height: provider.isEdited[index] 
-                    ? size.height * 0.15
-                    : null,
                     width: size.width,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
@@ -96,9 +97,9 @@ class LeaveHistoryScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             TextWidget(
-                              text: differnece == 0 
+                              text: difference == 0 
                                 ? 'One day application'
-                                : '${differnece+1} days application', 
+                                : '${difference + 1} days application', 
                               fontWeight: FontWeight.w500, 
                               fontSize: 16,
                               fontColor: Colors.grey,
@@ -107,83 +108,29 @@ class LeaveHistoryScreen extends StatelessWidget {
                             Row(
                               children: [
                                 // Edit Icon
-                                provider.isEdited[index]
-                                ? GestureDetector(
-                                  onTap: (){
-                                    provider.cancelLeave(index);
-                                  },
-                                  child: const Icon(CupertinoIcons.xmark, size: 20,),
-                                )
-                                :  GestureDetector(
+                                GestureDetector(
                                   onTap: () async {
-                                    // Change state of this widget to editing
-                                    provider.editLeave(index);
-                                    // PIck Edit Start Date
-                                    DateTime? editStartDate = await showDatePicker(
-                                      context: context, 
-                                      firstDate: DateTime.now(), 
-                                      lastDate: DateTime(2100),
-                                      initialDate: DateTime.parse(provider.editedStartDate[index].isNotEmpty ? provider.editedStartDate[index] :provider.leavesList[index].startDate),
-                                      fieldLabelText: "Start Date",
-                                      helpText: "Start Date",
+                                    provider.updateEditLeave(null, true);
+                                    provider.updateEditLeave(null, false);
+                                    print("Leave ID: ${provider.leavesList[index].leaveId}");
+                                    editLeaveSheet(
+                                      DateFormat("yyyy-MM-dd").parse(provider.leavesList[index].startDate), 
+                                      DateFormat("yyyy-MM-dd").parse(provider.leavesList[index].endDate), 
+                                      provider.leavesList[index].comments, 
+                                      context, size, index
                                     );
-                                      /// Check if the start date is null, and if so, set [provider.editedStartDate[index]] accordingly.
-                                      editStartDate != null 
-                                        ? provider.editedStartDate[index] = DateFormat("yyyy-MM-dd").format(editStartDate)
-                                        : provider.editedStartDate[index] = '';
-                                      /// If the [editedStartDate[index]] is empty it means the [editStartDate] returned null.
-                                      /// and the editing opertion is cancelled, if so, continuing edit opertion.
-                                      provider.editedStartDate[index].isEmpty 
-                                      ? provider.isEdited[index] = !provider.isEdited[index] 
-                                      : provider.isEdited[index] = true;
-                                    print('StartTime: ${provider.editedStartDate[index]}');
-                                    // Edit End Time
-                                    if (editStartDate != null) {
-                                      DateTime? editEndTime = await showDatePicker(
-                                        context: context, 
-                                        firstDate: DateTime.now(), 
-                                        lastDate: DateTime(2100),
-                                        initialDate: DateTime.parse(provider.editedEndDate[index].isNotEmpty ? provider.editedEndDate[index] :provider.leavesList[index].endDate),
-                                        fieldLabelText: "End Date",
-                                        helpText: "End Date",
-                                      );
-                                      /// Check if the start date is null, and if so, set [editEndTime] accordingly.
-                                      editEndTime != null 
-                                        ? provider.editedEndDate[index] = DateFormat("yyyy-MM-dd").format(editEndTime)
-                                        : provider.editedEndDate[index] = "";
-                                      /// If the [provider.editedEndDate[index]] is empty it means the [editEndTime] returned null
-                                      /// and the editing opertion is cancelled, if so, continuing edit opertion.
-                                      provider.editedEndDate[index].isEmpty 
-                                        ? provider.isEdited[index] = !provider.isEdited[index] 
-                                        : provider.isEdited[index] = true;
-                                    
-                                      print('End Time: $provider.editedEndDate[index]');
-                                    }
                                   }, 
                                   child: const Icon(CupertinoIcons.pencil)
                                 ),
                                 const SizedBox(width: 8,),
                                 GestureDetector(
                                   onTap: () async {
-                                    provider.isEdited[index]
-                                    ? await provider.editLeaveAPi(
-                                        index: index, 
-                                        leaveId: provider.leavesList[index].leaveId, 
-                                        size: size, 
-                                        context: context,
-                                        startDate: provider.editedStartDate[index].isEmpty ? provider.leavesList[index].startDate : provider.editedStartDate[index], 
-                                        endDate: provider.editedEndDate[index].isEmpty ? provider.leavesList[index].endDate : provider.editedEndDate[index], 
-                                        comments: provider.commentsController[index].text.isEmpty ? provider.leavesList[index].comments : provider.commentsController[index].text
-                                      )
-                                    : provider.confirmDeleteLeave(context, size, provider.leavesList[index].leaveId, index);
-                                    
+                                    provider.confirmDeleteLeave(context, size, provider.leavesList[index].leaveId, index);
                                   }, 
-                                  child: Icon(
-                                    provider.isEdited[index] 
-                                    ?  CupertinoIcons.floppy_disk 
-                                    : CupertinoIcons.delete_simple,
+                                  child: const Icon(
+                                    CupertinoIcons.delete_simple,
                                     size: 20,
-                                    color: !provider.isEdited[index] ? Colors.red : Colors.black,
+                                    color: Colors.red ,
                                   )
                                 ),
                                 const SizedBox(width: 5,)
@@ -196,25 +143,8 @@ class LeaveHistoryScreen extends StatelessWidget {
                           fontWeight: FontWeight.w600, 
                           fontSize: 24
                         ),
-                        provider.isEdited[index] ? const SizedBox(height: 15,) : const SizedBox(),
                         // Comments
-                        provider.isEdited[index] 
-                        ? SizedBox(
-                          width: size.width * 0.6,
-                          height: 10,
-                          child: TextField(
-                            controller: provider.commentsController[index],
-                            cursorHeight: 18,
-                            decoration: const InputDecoration(
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.grey
-                                )
-                              )
-                            ),
-                          ),
-                        )
-                        : SizedBox(
+                        SizedBox(
                           width: size.width*0.65,
                           child: TextWidget(
                             text: provider.leavesList[index].comments,
@@ -237,4 +167,218 @@ class LeaveHistoryScreen extends StatelessWidget {
       },
     );
   }
+
+
+  // Edit leave bottom sheet
+  void editLeaveSheet(
+    DateTime? startDate,
+    DateTime? endDate,
+    String comment,
+    BuildContext screenContext,
+    Size size,
+    int index, 
+  ){
+    showModalBottomSheet(
+      context: screenContext, 
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero
+      ),
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Consumer<ApiProvider>(
+          builder: (context, provider, child) {
+            return StatefulBuilder(
+              builder: (context, sheetState) {
+                final TextEditingController commentsController = TextEditingController(text: comment);
+                return Padding(
+                  padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                  child: Container(
+                    height: 300,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10,),
+                        const Center(
+                          child: Column(
+                            children: [
+                              TextWidget(text: "Update", fontWeight: FontWeight.w500, fontSize: 18),
+                              SizedBox(
+                                width: 40,
+                                child: Divider(
+                                  thickness: 1,
+                                  color: Colors.black,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Edit start date 
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const TextWidget(text: "Start date", fontSize: 14, fontWeight: FontWeight.w500),
+                                  const SizedBox(height: 10,),
+                                  ElevatedButton(
+                                    iconAlignment: IconAlignment.end,
+                                    onPressed: () async {
+                                      DateTime? editStartDate = await showDatePicker(
+                                        context: context, 
+                                        firstDate: startDate!, 
+                                        lastDate: endDate!,
+                                        initialDate: startDate,
+                                        fieldLabelText: "Start Date",
+                                        helpText: "Start Date",
+                                      );
+                                      if (editStartDate != null) {
+                                        provider.updateEditLeave(editStartDate, true);
+                                      }else{
+                                        provider.updateEditLeave(null, true);
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      backgroundColor: Colors.transparent.withOpacity(0.0),
+                                      shadowColor: Colors.transparent.withOpacity(0.0),
+                                      overlayColor: Colors.transparent.withOpacity(0.1),
+                                      shape: RoundedRectangleBorder(
+                                        side: BorderSide(color:  Colors.grey.shade300),
+                                        borderRadius: BorderRadius.circular(8)
+                                      )
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        TextWidget(
+                                          text: provider.updatedStartTime != null
+                                          ? DateFormat("dd MMM yyyy").format(provider.updatedStartTime!)
+                                          : DateFormat("dd MMM yyyy").format(startDate!), 
+                                          fontSize: 12, 
+                                          fontColor: Colors.black,
+                                          fontWeight: FontWeight.w400
+                                        ),
+                                        const SizedBox(width: 40,),
+                                        Icon(
+                                          CupertinoIcons.calendar,
+                                          size: 20,
+                                          color: Theme.of(context).primaryColor,
+                                        )
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                            // Edit end date 
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const TextWidget(text: "End date", fontSize: 14, fontWeight: FontWeight.w500),
+                                  const SizedBox(height: 10,),
+                                  ElevatedButton(
+                                    iconAlignment: IconAlignment.end,
+                                    onPressed: () async {
+                                      DateTime? editEndTime = await showDatePicker(
+                                        context: context, 
+                                        firstDate: startDate!, 
+                                        lastDate: DateTime(2100),
+                                        initialDate: endDate,
+                                        fieldLabelText: "End Date",
+                                        helpText: "End Date",
+                                      );
+                                      if (editEndTime != null) {
+                                        provider.updateEditLeave(editEndTime, false);
+                                      }else{
+                                        provider.updateEditLeave(null, false);
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      backgroundColor: Colors.transparent.withOpacity(0.0),
+                                      shadowColor: Colors.transparent.withOpacity(0.0),
+                                      overlayColor: Colors.transparent.withOpacity(0.1),
+                                      shape: RoundedRectangleBorder(
+                                        side: BorderSide(color:Colors.grey.shade300),
+                                        borderRadius: BorderRadius.circular(8)
+                                      )
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        TextWidget(
+                                          text: provider.updatedEndTime != null
+                                          ? DateFormat("dd MMM yyyy").format(provider.updatedEndTime!)
+                                          : DateFormat("dd MMM yyyy").format(endDate!), 
+                                          fontSize: 12, 
+                                          fontColor: Colors.black,
+                                          fontWeight: FontWeight.w400
+                                        ),
+                                        const SizedBox(width: 40,),
+                                        Icon(
+                                          CupertinoIcons.calendar,
+                                          size: 20,
+                                          color: Theme.of(context).primaryColor,
+                                        )
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                             
+                          ],
+                        ),
+                        const TextWidget(text: "Comments", fontSize: 14, fontWeight: FontWeight.w500),
+                        const SizedBox(height: 10,),
+                        TextFields(
+                          isObseure: false, 
+                          controller: commentsController,
+                          textInputAction: TextInputAction.done,
+                          // borderColor: provider.notSet && provider.commentsController.isEmpty ? Colors.red : null,
+                        ),
+                        const SizedBox(height: 10,),
+                        // Update button
+                        SizedBox(
+                          width: double.infinity,
+                          child: Consumer<ApiProvider>(
+                            builder: (context, provider, child) {
+                              return ButtonWidget(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                title: "Update" , 
+                                onPressed: () async {
+                                  Navigator.pop(sheetContext);
+                                  await provider.editLeaveAPi(
+                                    index: index, 
+                                    leaveId: provider.leavesList[index].leaveId, 
+                                    size: size, 
+                                    context: screenContext,
+                                    startDate: provider.updatedStartTime != null ? DateFormat("yyyy-MM-dd").format(provider.updatedStartTime!) : DateFormat("yyyy-MM-dd").format(startDate!), 
+                                    endDate: provider.updatedEndTime != null ? DateFormat("yyyy-MM-dd").format(provider.updatedEndTime!): DateFormat("yyyy-MM-dd").format(endDate!), 
+                                    comments: commentsController.text
+                                  );
+                                },
+                              );
+                            }
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        );
+      },
+    );
+  }
+
 }

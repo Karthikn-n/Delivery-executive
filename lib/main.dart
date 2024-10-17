@@ -38,14 +38,37 @@ class _MyAppState extends State<MyApp> {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent.withOpacity(0.0)
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white
         ),
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        primaryColorLight: Colors.white,
+        colorScheme:  const ColorScheme.light(
+          primary: Color(0xFF60B47B),
+        ),
         primaryColor: const Color(0xFF60B47B),
+        datePickerTheme: const DatePickerThemeData(
+          backgroundColor: Colors.white,
+          headerBackgroundColor: Color(0xFF60B47B),
+          headerForegroundColor: Colors.white,
+          dividerColor:  Color(0xFF60B47B),
+          rangePickerBackgroundColor: Color(0xFF60B47B),
+          cancelButtonStyle: ButtonStyle(
+            textStyle: WidgetStatePropertyAll(
+              TextStyle(color: Color(0xFF60B47B))
+            ),
+            foregroundColor: WidgetStatePropertyAll(Color(0xFF60B47B))
+          ),
+          yearStyle: TextStyle(color: Colors.white),
+          confirmButtonStyle: ButtonStyle(
+            textStyle: WidgetStatePropertyAll(
+              TextStyle(color: Color(0xFF60B47B))
+            ),
+            foregroundColor: WidgetStatePropertyAll(Color(0xFF60B47B))
+          ),
+        ),
+        primaryColorDark: Colors.black,
         scaffoldBackgroundColor: Colors.white,
-        useMaterial3: true,
+        
       ),
       home: const LoginPage()
     );

@@ -49,7 +49,6 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _currentLocation;
   Set<Marker> markers = {};
   final Set<Polyline> _polylines = {};
-  DateTime selectedDateTime = DateTime.now();
   LatLng destination = const LatLng(9.9279202, 78.1430728);
   List<int> additionalQuantities = [];
   List<int> additionalOrderedQuantites = [];
@@ -63,10 +62,12 @@ class _MapScreenState extends State<MapScreen> {
     MapType.satellite,
     MapType.terrain
   ];
+  bool isDelivered = false;
   List<String> mapNames = ['Default', 'Satelite', 'Terrain'];
   // List<String> allProductsNames = [];
   String? selectedProduct;
   List<ProductsModel> addedAllProducts = [];
+  final ScrollController _scrollController = ScrollController();
   @override
   void initState() {
     super.initState();
@@ -198,9 +199,9 @@ class _MapScreenState extends State<MapScreen> {
           // });
           showDialog(
             context: context,
-            builder: (BuildContext context) {
+            builder: (dialogContext) {
               return Consumer<ApiProvider>(
-                builder: (context, provider, child) {
+                builder: (providerContext, provider, child) {
                   selectedProduct = null;
                   allProducts = provider.allProducts;
                   tempAllProducts = provider.allProducts;
@@ -224,7 +225,7 @@ class _MapScreenState extends State<MapScreen> {
                               borderRadius: BorderRadius.circular(8)
                             ),
                             child: TextWidget(
-                              text: DateFormat('dd MMM yyyy').format(selectedDateTime), 
+                              text: DateFormat('dd MMM yyyy').format(DateTime.now()), 
                               fontSize: 14, 
                               fontWeight: FontWeight.w600,
                               fontColor: Theme.of(context).primaryColor
@@ -235,11 +236,15 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     content: SizedBox(
                       height: 500,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            _updateProducts(widget.productDetails),
-                          ],
+                      child: CupertinoScrollbar(
+                        controller: _scrollController,
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          child: Column(
+                            children: [
+                              _updateProducts(widget.productDetails),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -256,56 +261,73 @@ class _MapScreenState extends State<MapScreen> {
                               shape:WidgetStateProperty.all<OutlinedBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                             ),
                             onPressed: () async {
-                              List<Map<String, dynamic>> updatedSubscribedProductData = [];
-                              List<Map<String, dynamic>> updatedOrderedData = [];
-                              // List of subscribed Product that delivered to the Customer Data
-                              for (int i = 0; i < widget.productDetails.products.length; i++) {
-                                SubscribedProductData productList = widget.productDetails.products[i];
-                                Map<String, dynamic> subscribedProductData = {
-                                  'quantity': productList.evgQty + productList.evgQty + additionalQuantities[i],
-                                  'sub_id': productList.subId, // Assuming subId is required
-                                  'product_id': productList.productId , // Assuming productId is required
-                                  'amount': productList.price ,
-                                  'delivery_date' : DateFormat("yyyy-MM-dd").format(DateTime.now())// Assuming price is required
+                              try {
+                                List<Map<String, dynamic>> updatedSubscribedProductData = [];
+                                List<Map<String, dynamic>> updatedOrderedData = [];
+                                // List of subscribed Product that delivered to the Customer Data
+                                for (int i = 0; i < widget.productDetails.products.length; i++) {
+                                  SubscribedProductData productList = widget.productDetails.products[i];
+                                  Map<String, dynamic> subscribedProductData = {
+                                    'quantity': productList.evgQty + productList.evgQty + additionalQuantities[i],
+                                    'sub_id': productList.subId, // Assuming subId is required
+                                    'product_id': productList.productId , // Assuming productId is required
+                                    'amount': productList.price ,
+                                    'delivery_date' : DateFormat("yyyy-MM-dd").format(DateTime.now())// Assuming price is required
+                                  };
+                                  updatedSubscribedProductData.add(subscribedProductData);
+                                }
+                                // List of ordered product by user and delivered to the Customer Data
+                                for (var i = 0; i < widget.productDetails.orderProducts.length; i++) {
+                                  OrderedProductsModel product = widget.productDetails.orderProducts[i];
+                                  Map<String, dynamic> orderedData = {
+                                    "sub_id": product.orderid,
+                                    "product_id": product.productId,
+                                    "product_name": product.productName,
+                                    "quantity": product.quantity + additionalOrderedQuantites[i],
+                                    "product_price":  product.price
+                                  };
+                                  updatedOrderedData.add(orderedData);
+                                }
+                                Map<String, dynamic> deliveryData = {
+                                  'deliveryexecutive_id': prefs.getString('executiveId'),
+                                  'customer_id': widget.customerId,
+                                  'address_id': widget.addressId,
+                                  'product_data': updatedSubscribedProductData,
+                                  'order_data': updatedOrderedData,
                                 };
-                                updatedSubscribedProductData.add(subscribedProductData);
-                              }
-                              // List of ordered product by user and delivered to the Customer Data
-                              for (var i = 0; i < widget.productDetails.orderProducts.length; i++) {
-                                OrderedProductsModel product = widget.productDetails.orderProducts[i];
-                                Map<String, dynamic> orderedData = {
-                                  "sub_id": product.orderid,
-                                  "product_id": product.productId,
-                                  "product_name": product.productName,
-                                  "quantity": product.quantity + additionalOrderedQuantites[i],
-                                  "product_price":  product.price
-                                };
-                                updatedOrderedData.add(orderedData);
-                              }
-                              Map<String, dynamic> deliveryData = {
-                                'deliveryexecutive_id': prefs.getString('executiveId'),
-                                'customer_id': widget.customerId,
-                                'address_id': widget.addressId,
-                                'product_data': updatedSubscribedProductData,
-                                'order_data': updatedOrderedData,
-                              };
-                              final response = await userLocationRepository.updateDelivery(deliveryData);
-                              String decryptedResponse= decryptAES(response.body).replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), '');
-                              final decodedResponse = json.decode(decryptedResponse);
-                              print('Updated Delivery Response: $decodedResponse, Status Code: ${response.statusCode}');
-                              final deliveredMessage = snackBarMessage(
-                                context: context, 
-                                message: decodedResponse['message'], 
-                                backgroundColor: const Color(0xFF60B47B), 
-                              );
-                              if (response.statusCode == 200 && decodedResponse['status'] == "success") {
-                                ScaffoldMessenger.of(context).showSnackBar(deliveredMessage).closed.then((value) {
-                                  Navigator.pop(context);
-                                  Navigator.pop(context);
-                                },);
-                              }else{
-                                print('Error: $decodedResponse');
-                              }
+                                final response = await userLocationRepository.updateDelivery(deliveryData);
+                                String decryptedResponse= decryptAES(response.body).replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), '');
+                                final decodedResponse = json.decode(decryptedResponse);
+                                print('Updated Delivery Response: $decodedResponse, Status Code: ${response.statusCode}');
+                                final deliveredMessage = snackBarMessage(
+                                  context: context, 
+                                  message: decodedResponse['message'], 
+                                  backgroundColor: const Color(0xFF60B47B), 
+                                  sidePadding: MediaQuery.sizeOf(context).width * 0.1,
+                                  bottomPadding: MediaQuery.sizeOf(context).width * 0.05,
+                                );
+                                if (response.statusCode == 200 && decodedResponse['status'] == "success") {
+                                  provider.messagePopup(context, MediaQuery.sizeOf(context), "assets/happy-face.png", "Order Delivered Successfully");
+                                  // Navigator.pop(dialogContext);
+                                  // ScaffoldMessenger.of(context).showSnackBar(deliveredMessage).closed.then((value) {
+                                    Future.delayed(const Duration(seconds: 2),() {
+                                      Navigator.pop(context);
+                                      Navigator.pop(dialogContext);
+                                      Navigator.pop(context);
+                                    },);
+                                  // },);
+                                }else{
+                                  print('Error: $decodedResponse');
+                                }
+                              } catch (e) {
+                                final deliveredMessage = snackBarMessage(
+                                  context: context, 
+                                  message: "Something went wrong contact admin", 
+                                  backgroundColor: const Color(0xFF60B47B), 
+                                );
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(deliveredMessage);
+                              } 
                             },
                             child: const Text('Mark us Delivered', style: TextStyle(color: Colors.white),),
                           ),
@@ -395,488 +417,491 @@ class _MapScreenState extends State<MapScreen> {
     Size size = MediaQuery.sizeOf(context);
     return StatefulBuilder(
       builder: (context, StateSetter update) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10,),
-            // subscribe Products to Deliver
-            productList.products.isEmpty
-            ? Container()
-            : const Padding(
-                padding: EdgeInsets.only(left: 12.0),
-                child: TextWidget(text: 'Subscribed Product', fontSize: 16, fontWeight: FontWeight.w500,),
-              ),
-              SizedBox(
-                height: productList.products.length * 120,
-              // subscribe Products List 
-                child: ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: productList.products.length,
-                  itemBuilder: (context, index) {
-                    SubscribedProductData product = productList.products[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 10, left: 12, right: 12),
-                      child: Container(
-                        height: 110,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(8)
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            TextWidget(
-                              text: product.productName, 
-                              fontSize: 14, 
-                              fontWeight: FontWeight.w600
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: size.width * 0.34,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      TextWidget(
-                                        text: 'Mrng: ${product.mrngQty.toString()} x ${product.quantity}',
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                      TextWidget(
-                                        text: 'Evng: ${product.evgQty.toString()} x ${product.quantity}',
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                      TextWidget(
-                                        text: 'Price : ₹${product.price.toString()}', 
-                                        fontSize: 14, 
-                                        fontWeight: FontWeight.w600, 
-                                        fontColor: Theme.of(context).primaryColor,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Additional Quantity enter button
-                                Container(
-                                  height: size.height * 0.04,
-                                  width: size.width * 0.22,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey.shade400),
-                                    borderRadius: BorderRadius.circular(8)
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // Product Quantity decrease
-                                      GestureDetector(
-                                        onTap: (){
-                                          update(() {
-                                            if (additionalQuantities[index] > 0) {
-                                              additionalQuantities[index] = additionalQuantities[index] - 1;
-                                            }
-                                          });
-                                        },
-                                        child: Container(
-                                          width: size.width * 0.07,
-                                          height: size.height * 0.04,
-                                          decoration: BoxDecoration(
-                                            borderRadius: const BorderRadius.only(
-                                              topLeft: Radius.circular(8),
-                                              bottomLeft: Radius.circular(8)
-                                            ),
-                                            border: Border(right: BorderSide(color: Colors.grey.shade400,))
-                                          ),
-                                          child: const Icon(Icons.remove, size: 15,),
-                                        ),
-                                      ),
-                                      // Product Quantity Count
-                                      SizedBox(
-                                        width: size.width * 0.07,
-                                        child: Center(
-                                          child: Text(
-                                            '${additionalQuantities[index]}',
-                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                                          ),
-                                        ),
-                                      ),
-                                      // Product Quantity increase
-                                      GestureDetector(
-                                        onTap: (){
-                                            update(() {
-                                            additionalQuantities[index] = additionalQuantities[index] + 1;
-                                          });
-                                        },
-                                        child: Container(
-                                          width: size.width * 0.07,
-                                          height: size.height * 0.04,
-                                          decoration: BoxDecoration(
-                                            borderRadius: const BorderRadius.only(
-                                              topRight: Radius.circular(8),
-                                              bottomRight: Radius.circular(8)
-                                            ),
-                                            border: Border(left: BorderSide(color: Colors.grey.shade400,))
-                                          ),
-                                          child: Icon(
-                                            Icons.add, 
-                                            size: 15,
-                                            color: additionalQuantities[index] >= 1 
-                                            ? const Color(0xFF60B47B)
-                                            :  Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                      
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+        return CupertinoScrollbar(
+          controller: _scrollController,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 10,),
+              // subscribe Products to Deliver
+              productList.products.isEmpty
+              ? Container()
+              : const Padding(
+                  padding: EdgeInsets.only(left: 12.0),
+                  child: TextWidget(text: 'Subscribed Product', fontSize: 16, fontWeight: FontWeight.w500,),
                 ),
-              ),
-            const SizedBox(height: 10,),
-            // ordered products list
-            productList.orderProducts.isEmpty
-            ? Container()
-            : const Padding(
-                padding: EdgeInsets.only(left: 12.0),
-                child: TextWidget(text: 'Ordered Product', fontSize: 16, fontWeight: FontWeight.w500,),
-              ),
-              SizedBox(
-                height: productList.orderProducts.length * size.height * 0.12,
-                child: ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: productList.orderProducts.length,
-                  itemBuilder: (context, index) {
-                    OrderedProductsModel product = productList.orderProducts[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 10, left: 12, right: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        // height: size.height * 0.1,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(8)
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                SizedBox(
-                                  width: size.width * 0.4,
-                                  child: TextWidget(
-                                    text: '${product.productName}(${product.quantity})', 
-                                    fontSize: 14, 
-                                    maxLines: 2,
-                                    textOverflow: TextOverflow.ellipsis,
-                                    fontWeight: FontWeight.w600
-                                  ),
-                                ),
-                                TextWidget(
-                                  text: 'Price : ₹${product.price.toString()}', 
-                                  fontSize: 14, 
-                                  fontWeight: FontWeight.w600, 
-                                  fontColor: Theme.of(context).primaryColor,
-                                ),
-                              ],
-                            ),
-                            Container(
-                              height: size.height * 0.04,
-                              width: size.width * 0.22,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade400),
-                                borderRadius: BorderRadius.circular(8)
+                SizedBox(
+                  height: productList.products.length * 120,
+                // subscribe Products List 
+                  child: ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: productList.products.length,
+                    itemBuilder: (context, index) {
+                      SubscribedProductData product = productList.products[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10, left: 12, right: 12),
+                        child: Container(
+                          height: 110,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8)
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextWidget(
+                                text: product.productName, 
+                                fontSize: 14, 
+                                fontWeight: FontWeight.w600
                               ),
-                              child: Row(
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // Product Quantity decrease
-                                  GestureDetector(
-                                    onTap: (){
-                                      update(() {
-                                        if (additionalOrderedQuantites[index] > 1) {
-                                          additionalOrderedQuantites[index] = additionalOrderedQuantites[index] - 1;
-                                        }
-                                      });
-                                    },
-                                    child: Container(
-                                      width: size.width * 0.07,
-                                      height: size.height * 0.04,
-                                      decoration: BoxDecoration(
-                                        borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(8),
-                                          bottomLeft: Radius.circular(8)
-                                        ),
-                                        border: Border(right: BorderSide(color: Colors.grey.shade400,))
-                                      ),
-                                      child: const Icon(
-                                        CupertinoIcons.minus, 
-                                        size: 15,
-                                      ),
-                                    ),
-                                  ),
-                                  // Product Quantity Count
                                   SizedBox(
-                                    width: size.width * 0.07,
-                                    child: Center(
-                                      child: Text(
-                                        '${additionalOrderedQuantites[index]}',
-                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                                      ),
+                                    width: size.width * 0.34,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        TextWidget(
+                                          text: 'Mrng: ${product.mrngQty.toString()} x ${product.quantity}',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                        TextWidget(
+                                          text: 'Evng: ${product.evgQty.toString()} x ${product.quantity}',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                        TextWidget(
+                                          text: 'Price : ₹${product.price.toString()}', 
+                                          fontSize: 14, 
+                                          fontWeight: FontWeight.w600, 
+                                          fontColor: Theme.of(context).primaryColor,
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  // Product Quantity increase
-                                  GestureDetector(
-                                    onTap: (){
-                                      update(() {
-                                        additionalOrderedQuantites[index] = additionalOrderedQuantites[index] + 1;
-                                      });
-                                    },
-                                    child: Container(
-                                      width: size.width * 0.07,
-                                      height: size.height * 0.04,
-                                      decoration: BoxDecoration(
-                                        borderRadius: const BorderRadius.only(
-                                          topRight: Radius.circular(8),
-                                          bottomRight: Radius.circular(8)
-                                        ),
-                                        border: Border(left: BorderSide(color: Colors.grey.shade400,))
-                                      ),
-                                      child: Icon(
-                                        Icons.add, 
-                                        size: 15,
-                                        color: additionalOrderedQuantites[index] >= 1 
-                                        ? const Color(0xFF60B47B)
-                                        :  Colors.black,
-                                      ),
+                                  // Additional Quantity enter button
+                                  Container(
+                                    height: size.height * 0.04,
+                                    width: size.width * 0.22,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey.shade400),
+                                      borderRadius: BorderRadius.circular(8)
                                     ),
+                                    child: Row(
+                                      children: [
+                                        // Product Quantity decrease
+                                        GestureDetector(
+                                          onTap: (){
+                                            update(() {
+                                              if (additionalQuantities[index] > 0) {
+                                                additionalQuantities[index] = additionalQuantities[index] - 1;
+                                              }
+                                            });
+                                          },
+                                          child: Container(
+                                            width: size.width * 0.07,
+                                            height: size.height * 0.04,
+                                            decoration: BoxDecoration(
+                                              borderRadius: const BorderRadius.only(
+                                                topLeft: Radius.circular(8),
+                                                bottomLeft: Radius.circular(8)
+                                              ),
+                                              border: Border(right: BorderSide(color: Colors.grey.shade400,))
+                                            ),
+                                            child: const Icon(Icons.remove, size: 15,),
+                                          ),
+                                        ),
+                                        // Product Quantity Count
+                                        SizedBox(
+                                          width: size.width * 0.07,
+                                          child: Center(
+                                            child: Text(
+                                              '${additionalQuantities[index]}',
+                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                            ),
+                                          ),
+                                        ),
+                                        // Product Quantity increase
+                                        GestureDetector(
+                                          onTap: (){
+                                              update(() {
+                                              additionalQuantities[index] = additionalQuantities[index] + 1;
+                                            });
+                                          },
+                                          child: Container(
+                                            width: size.width * 0.07,
+                                            height: size.height * 0.04,
+                                            decoration: BoxDecoration(
+                                              borderRadius: const BorderRadius.only(
+                                                topRight: Radius.circular(8),
+                                                bottomRight: Radius.circular(8)
+                                              ),
+                                              border: Border(left: BorderSide(color: Colors.grey.shade400,))
+                                            ),
+                                            child: Icon(
+                                              Icons.add, 
+                                              size: 15,
+                                              color: additionalQuantities[index] >= 1 
+                                              ? const Color(0xFF60B47B)
+                                              :  Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                        
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: 10,),
+              // ordered products list
+              productList.orderProducts.isEmpty
+              ? Container()
+              : const Padding(
+                  padding: EdgeInsets.only(left: 12.0),
+                  child: TextWidget(text: 'Ordered Product', fontSize: 16, fontWeight: FontWeight.w500,),
+                ),
+                SizedBox(
+                  height: productList.orderProducts.length * size.height * 0.12,
+                  child: ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: productList.orderProducts.length,
+                    itemBuilder: (context, index) {
+                      OrderedProductsModel product = productList.orderProducts[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10, left: 12, right: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          // height: size.height * 0.1,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8)
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  SizedBox(
+                                    width: size.width * 0.4,
+                                    child: TextWidget(
+                                      text: '${product.productName}(${product.quantity})', 
+                                      fontSize: 14, 
+                                      maxLines: 2,
+                                      textOverflow: TextOverflow.ellipsis,
+                                      fontWeight: FontWeight.w600
+                                    ),
+                                  ),
+                                  TextWidget(
+                                    text: 'Price : ₹${product.price.toString()}', 
+                                    fontSize: 14, 
+                                    fontWeight: FontWeight.w600, 
+                                    fontColor: Theme.of(context).primaryColor,
                                   ),
                                 ],
                               ),
-                            ),
-                                      
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            const SizedBox(height: 10,),
-            // All products for Delivery Agent
-            const Padding(
-              padding: EdgeInsets.only(left: 12.0),
-              child: TextWidget(text: 'Additional Product', fontSize: 16, fontWeight: FontWeight.w500,),
-            ),
-            const SizedBox(height: 10,),
-            addedAllProducts.isEmpty
-            ? Container()
-            : SizedBox(
-                height: addedAllProducts.length * size.height * 0.115,
-                child: ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: addedAllProducts.length,
-                  itemBuilder: (context, index) {
-                    // OrderedProductsModel product = productList.orderProducts[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 10, left: 12, right: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        height: size.height * 0.1,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(8)
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            TextWidget(
-                              text: '${addedAllProducts[index].name}(${addedAllProducts[index].quantity})', 
-                              fontSize: 14, 
-                              fontWeight: FontWeight.w600
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                TextWidget(
-                                  text: 'Price : ₹${addedAllProducts[index].price.toString()}', 
-                                  fontSize: 14, 
-                                  fontWeight: FontWeight.w600, 
-                                  fontColor: Theme.of(context).primaryColor,
+                              Container(
+                                height: size.height * 0.04,
+                                width: size.width * 0.22,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade400),
+                                  borderRadius: BorderRadius.circular(8)
                                 ),
-                                // Additional product count
-                                Container(
-                                  height: size.height * 0.04,
-                                  width: size.width * 0.22,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey.shade400),
-                                    borderRadius: BorderRadius.circular(8)
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // Product Quantity decrease
-                                      GestureDetector(
-                                        onTap: (){
-                                          update(() {
-                                            if (additionalAllProductQuantites[index] > 1) {
-                                              additionalAllProductQuantites[index] = additionalAllProductQuantites[index] - 1;
-                                            }
-                                            if (additionalAllProductQuantites[index] == 1) {
-                                              tempAllProducts.add(addedAllProducts[index]);
-                                              addedAllProducts.removeAt(index);
-                                              additionalAllProductQuantites.removeAt(index);
-                                            }
-                                          });
-                                        },
-                                        child: Container(
-                                          width: size.width * 0.07,
-                                          height: size.height * 0.04,
-                                          decoration: BoxDecoration(
-                                            borderRadius: const BorderRadius.only(
-                                              topLeft: Radius.circular(8),
-                                              bottomLeft: Radius.circular(8)
-                                            ),
-                                            border: Border(right: BorderSide(color: Colors.grey.shade400,))
-                                          ),
-                                          child: Icon(
-                                            additionalAllProductQuantites[index] == 1 
-                                            ? CupertinoIcons.delete 
-                                            : CupertinoIcons.minus, 
-                                            size: 15,
-                                            color: additionalAllProductQuantites[index] == 1
-                                              ? Colors.red
-                                              : null,
-                                          ),
-                                        ),
-                                      ),
-                                      // Product Quantity Count
-                                      SizedBox(
+                                child: Row(
+                                  children: [
+                                    // Product Quantity decrease
+                                    GestureDetector(
+                                      onTap: (){
+                                        update(() {
+                                          if (additionalOrderedQuantites[index] > 1) {
+                                            additionalOrderedQuantites[index] = additionalOrderedQuantites[index] - 1;
+                                          }
+                                        });
+                                      },
+                                      child: Container(
                                         width: size.width * 0.07,
-                                        child: Center(
-                                          child: Text(
-                                            '${additionalAllProductQuantites[index]}',
-                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                        height: size.height * 0.04,
+                                        decoration: BoxDecoration(
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(8),
+                                            bottomLeft: Radius.circular(8)
                                           ),
+                                          border: Border(right: BorderSide(color: Colors.grey.shade400,))
+                                        ),
+                                        child: const Icon(
+                                          CupertinoIcons.minus, 
+                                          size: 15,
                                         ),
                                       ),
-                                      // Product Quantity increase
-                                      GestureDetector(
-                                        onTap: (){
-                                          update(() {
-                                            additionalAllProductQuantites[index] = additionalAllProductQuantites[index] + 1;
-                                          });
-                                        },
-                                        child: Container(
-                                          width: size.width * 0.07,
-                                          height: size.height * 0.04,
-                                          decoration: BoxDecoration(
-                                            borderRadius: const BorderRadius.only(
-                                              topRight: Radius.circular(8),
-                                              bottomRight: Radius.circular(8)
-                                            ),
-                                            border: Border(left: BorderSide(color: Colors.grey.shade400,))
-                                          ),
-                                          child: Icon(
-                                            Icons.add, 
-                                            size: 15,
-                                            color: additionalAllProductQuantites[index] >= 1 
-                                            ? const Color(0xFF60B47B)
-                                            :  Colors.black,
-                                          ),
+                                    ),
+                                    // Product Quantity Count
+                                    SizedBox(
+                                      width: size.width * 0.07,
+                                      child: Center(
+                                        child: Text(
+                                          '${additionalOrderedQuantites[index]}',
+                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                    // Product Quantity increase
+                                    GestureDetector(
+                                      onTap: (){
+                                        update(() {
+                                          additionalOrderedQuantites[index] = additionalOrderedQuantites[index] + 1;
+                                        });
+                                      },
+                                      child: Container(
+                                        width: size.width * 0.07,
+                                        height: size.height * 0.04,
+                                        decoration: BoxDecoration(
+                                          borderRadius: const BorderRadius.only(
+                                            topRight: Radius.circular(8),
+                                            bottomRight: Radius.circular(8)
+                                          ),
+                                          border: Border(left: BorderSide(color: Colors.grey.shade400,))
+                                        ),
+                                        child: Icon(
+                                          Icons.add, 
+                                          size: 15,
+                                          color: additionalOrderedQuantites[index] >= 1 
+                                          ? const Color(0xFF60B47B)
+                                          :  Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                  
-                              ],
-                            ),
-                          ],
+                              ),
+                                        
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
+              const SizedBox(height: 10,),
+              // All products for Delivery Agent
+              const Padding(
+                padding: EdgeInsets.only(left: 12.0),
+                child: TextWidget(text: 'Additional Product', fontSize: 16, fontWeight: FontWeight.w500,),
               ),
-            // const SizedBox(height: ,),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: GestureDetector(
-                onTap: (){
-                  print(tempAllProducts.length);
-                  FocusScope.of(context).requestFocus(_focusNode);
-                },
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: size.height * 0.05
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.grey.shade300
+              const SizedBox(height: 10,),
+              addedAllProducts.isEmpty
+              ? Container()
+              : SizedBox(
+                  height: addedAllProducts.length * size.height * 0.115,
+                  child: ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: addedAllProducts.length,
+                    itemBuilder: (context, index) {
+                      // OrderedProductsModel product = productList.orderProducts[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10, left: 12, right: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          height: size.height * 0.1,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8)
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              TextWidget(
+                                text: '${addedAllProducts[index].name}(${addedAllProducts[index].quantity})', 
+                                fontSize: 14, 
+                                fontWeight: FontWeight.w600
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  TextWidget(
+                                    text: 'Price : ₹${addedAllProducts[index].price.toString()}', 
+                                    fontSize: 14, 
+                                    fontWeight: FontWeight.w600, 
+                                    fontColor: Theme.of(context).primaryColor,
+                                  ),
+                                  // Additional product count
+                                  Container(
+                                    height: size.height * 0.04,
+                                    width: size.width * 0.22,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey.shade400),
+                                      borderRadius: BorderRadius.circular(8)
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Product Quantity decrease
+                                        GestureDetector(
+                                          onTap: (){
+                                            update(() {
+                                              if (additionalAllProductQuantites[index] > 1) {
+                                                additionalAllProductQuantites[index] = additionalAllProductQuantites[index] - 1;
+                                              }
+                                              if (additionalAllProductQuantites[index] == 1) {
+                                                tempAllProducts.add(addedAllProducts[index]);
+                                                addedAllProducts.removeAt(index);
+                                                additionalAllProductQuantites.removeAt(index);
+                                              }
+                                            });
+                                          },
+                                          child: Container(
+                                            width: size.width * 0.07,
+                                            height: size.height * 0.04,
+                                            decoration: BoxDecoration(
+                                              borderRadius: const BorderRadius.only(
+                                                topLeft: Radius.circular(8),
+                                                bottomLeft: Radius.circular(8)
+                                              ),
+                                              border: Border(right: BorderSide(color: Colors.grey.shade400,))
+                                            ),
+                                            child: Icon(
+                                              additionalAllProductQuantites[index] == 1 
+                                              ? CupertinoIcons.delete 
+                                              : CupertinoIcons.minus, 
+                                              size: 15,
+                                              color: additionalAllProductQuantites[index] == 1
+                                                ? Colors.red
+                                                : null,
+                                            ),
+                                          ),
+                                        ),
+                                        // Product Quantity Count
+                                        SizedBox(
+                                          width: size.width * 0.07,
+                                          child: Center(
+                                            child: Text(
+                                              '${additionalAllProductQuantites[index]}',
+                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                            ),
+                                          ),
+                                        ),
+                                        // Product Quantity increase
+                                        GestureDetector(
+                                          onTap: (){
+                                            update(() {
+                                              additionalAllProductQuantites[index] = additionalAllProductQuantites[index] + 1;
+                                            });
+                                          },
+                                          child: Container(
+                                            width: size.width * 0.07,
+                                            height: size.height * 0.04,
+                                            decoration: BoxDecoration(
+                                              borderRadius: const BorderRadius.only(
+                                                topRight: Radius.circular(8),
+                                                bottomRight: Radius.circular(8)
+                                              ),
+                                              border: Border(left: BorderSide(color: Colors.grey.shade400,))
+                                            ),
+                                            child: Icon(
+                                              Icons.add, 
+                                              size: 15,
+                                              color: additionalAllProductQuantites[index] >= 1 
+                                              ? const Color(0xFF60B47B)
+                                              :  Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                    
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(10)
+                      );
+                    },
+                  ),
+                ),
+              // const SizedBox(height: ,),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: GestureDetector(
+                  onTap: (){
+                    print(tempAllProducts.length);
+                    FocusScope.of(context).requestFocus(_focusNode);
+                  },
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: size.height * 0.05
                       ),
-                      child: Consumer<ApiProvider>(
-                        builder: (context, provider, child) {
-                          return DropdownButton(
-                            dropdownColor: Theme.of(context).scaffoldBackgroundColor,
-                            elevation: 3,
-                            focusNode: _focusNode,
-                            menuMaxHeight: size.height * 0.6,
-                            underline: Container(),
-                            borderRadius: BorderRadius.circular(8),
-                            value: selectedProduct,
-                            icon: Container(),
-                            alignment: Alignment.center,
-                            hint: const TextWidget(
-                              text: 'Add Product +', 
-                              fontWeight: FontWeight.w500, 
-                              fontSize: 13
-                            ),
-                            items: provider.allProducts.map((product) {
-                              return DropdownMenuItem(
-                                value: product.name,
-                                child: TextWidget(
-                                  text: product.name, 
-                                  fontWeight: FontWeight.w500, 
-                                  fontSize: 13
-                                ),
-                              );
-                            },).toList(), 
-                            onChanged: (value) {
-                              update(() {
-                                selectedProduct = value!;
-                                print('Selected Product: $selectedProduct');
-                                ProductsModel? selectedModel = provider.allProducts.firstWhere((element) => element.name == selectedProduct, orElse: () => ProductsModel(id: 0, name: "", quantity: "1", price: 0, finalPrice: 0, description: "", image: ""),);
-                                addedAllProducts.add(selectedModel);
-                                print('Added Prodct length: ${addedAllProducts.length}');
-                                additionalAllProductQuantites.add(1);
-                                print('Qunatites - $additionalAllProductQuantites');
-                                selectedProduct = null;
-                              });
-                            },
-                          );
-                        }
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey.shade300
+                          ),
+                          borderRadius: BorderRadius.circular(10)
+                        ),
+                        child: Consumer<ApiProvider>(
+                          builder: (context, provider, child) {
+                            return DropdownButton(
+                              dropdownColor: Theme.of(context).scaffoldBackgroundColor,
+                              elevation: 3,
+                              focusNode: _focusNode,
+                              menuMaxHeight: size.height * 0.6,
+                              underline: Container(),
+                              borderRadius: BorderRadius.circular(8),
+                              value: selectedProduct,
+                              icon: Container(),
+                              alignment: Alignment.center,
+                              hint: const TextWidget(
+                                text: 'Add Product +', 
+                                fontWeight: FontWeight.w500, 
+                                fontSize: 13
+                              ),
+                              items: provider.allProducts.map((product) {
+                                return DropdownMenuItem(
+                                  value: product.name,
+                                  child: TextWidget(
+                                    text: product.name, 
+                                    fontWeight: FontWeight.w500, 
+                                    fontSize: 13
+                                  ),
+                                );
+                              },).toList(), 
+                              onChanged: (value) {
+                                update(() {
+                                  selectedProduct = value!;
+                                  print('Selected Product: $selectedProduct');
+                                  ProductsModel? selectedModel = provider.allProducts.firstWhere((element) => element.name == selectedProduct, orElse: () => ProductsModel(id: 0, name: "", quantity: "1", price: 0, finalPrice: 0, description: "", image: ""),);
+                                  addedAllProducts.add(selectedModel);
+                                  print('Added Prodct length: ${addedAllProducts.length}');
+                                  additionalAllProductQuantites.add(1);
+                                  print('Qunatites - $additionalAllProductQuantites');
+                                  selectedProduct = null;
+                                });
+                              },
+                            );
+                          }
+                        ),
                       ),
                     ),
                   ),
+               
                 ),
-             
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         );
         
       },

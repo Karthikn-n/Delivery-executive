@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:app_5/encrypt_decrypt.dart';
 import 'package:app_5/helper/navigation_helper.dart';
@@ -31,15 +32,11 @@ class ApiProvider extends ChangeNotifier{
   Map<int, int> additionalProductQuantities = {};
   List<int> orderedProductsAdditionalQuantities = [];
   List<SkuAdditionalPickupModel> additionalPickupData = [];
-
+  bool isPicking = false;
 
   // Leaves Data
   List<LeavesModel> leavesList = [];
-   List<String> editedStartDate = [];
-  List<String> editedEndDate = [];
-  List<TextEditingController> commentsController = [];
-  List<bool> isEdited = [];
-
+  bool notSet = false;
   // Customer Location data
   List<DeliveryProducts> deliveryProductsList = [];
   List<OrderedProductsModel> customerOrderProducts = [];
@@ -48,6 +45,23 @@ class ApiProvider extends ChangeNotifier{
   // Customer Addresses List
   List<CustomerAddress> addressList = [];
 
+  // Edit Leaves
+  DateTime? updatedStartTime;
+  DateTime? updatedEndTime;
+
+  void validate(bool isOk){
+    notSet = true;
+    notifyListeners();
+  }
+
+  void updateEditLeave(DateTime? date, bool isStart){
+    if (isStart) {
+      updatedStartTime = date;
+    }else{
+      updatedEndTime = date;
+    }
+    notifyListeners();
+  }
 
   /// API CALLS ///
 
@@ -61,6 +75,8 @@ class ApiProvider extends ChangeNotifier{
       context: context, 
       message: decodedResponse['message'], 
       backgroundColor: const Color(0xFF60B47B), 
+      sidePadding: size.width * 0.1,
+      bottomPadding:  size.height * 0.05
     );
     if(response.statusCode == 200 && decodedResponse["message"] == "LoggedIn successfully") {
       ScaffoldMessenger.of(context).showSnackBar(loginMessgae).closed.then((value) async{
@@ -74,6 +90,30 @@ class ApiProvider extends ChangeNotifier{
     
     } else {
       ScaffoldMessenger.of(context).showSnackBar(loginMessgae);
+      print("Error: $decodedResponse");
+    }
+    notifyListeners();
+  }
+
+  // Forget password
+  Future<void> forgetPassword(BuildContext context,  Map<String, dynamic> forgetPasswordData, Size size) async {
+    final response = await apiRespository.forgetPassword(forgetPasswordData);
+    final decryptedResponse = decryptAES(response.body).replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), '');
+    final decodedResponse = json.decode(decryptedResponse);
+    print('Forget password response data: $decodedResponse, Status Code: ${response.statusCode}');
+    final forgetMessage = snackBarMessage(
+      context: context, 
+      message: decodedResponse['message'], 
+      backgroundColor: const Color(0xFF60B47B), 
+      sidePadding: size.width * 0.1,
+      bottomPadding:  size.height * 0.05
+    );
+    if(response.statusCode == 200 && decodedResponse["status"] == "success") {
+      ScaffoldMessenger.of(context).showSnackBar(forgetMessage).closed.then((value){
+        Navigator.pop(context);
+      },);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(forgetMessage);
       print("Error: $decodedResponse");
     }
     notifyListeners();
@@ -136,6 +176,11 @@ class ApiProvider extends ChangeNotifier{
       
       prefs.setString('calledToday', DateTime(DateTime.now().day).toString());
     }
+    notifyListeners();
+  }
+
+  void picked(bool isPicked){
+    isPicking= isPicked;
     notifyListeners();
   }
 
@@ -231,7 +276,7 @@ class ApiProvider extends ChangeNotifier{
       message: decodedReponse['message'], 
       backgroundColor: Theme.of(context).primaryColor,
       bottomPadding: size.height * 0.12,
-      sidePadding: size.width * 0.85
+      sidePadding: size.width * 0.08
     );
     if (response.statusCode == 200 && decodedReponse['status'] == "success") {
       ScaffoldMessenger.of(context).showSnackBar(pickupMessage).closed.then((value) {
@@ -259,15 +304,8 @@ class ApiProvider extends ChangeNotifier{
     print('Leave History Response: $decodedResponse, Status Code: ${response.statusCode}');
     if (response.statusCode == 200) {
       List<dynamic> leaveHistory = decodedResponse['results'] as List;
-      
-      leavesList = leaveHistory.map((map) => LeavesModel.fromMap(map),).toList();
-      leavesList.reversed.toList();
-      commentsController = List.generate(leavesList.length, (index) => TextEditingController(text: leavesList[index].comments),);
-      isEdited = List.generate(leavesList.length, (index) => false,);
-      editedStartDate = List.generate(leavesList.length, (index) => "",);
-      editedEndDate = List.generate(leavesList.length, (index) => "",);
-      print('Leaves: ${leavesList.length}');
-    
+      leavesList = leaveHistory.map((map) => LeavesModel.fromMap(map),).toList().reversed.toList();
+      notifyListeners();
     }else{
       print("Error: $decodedResponse");
     }
@@ -287,13 +325,12 @@ class ApiProvider extends ChangeNotifier{
       message: decodedResponse['message'], 
       backgroundColor: const Color(0xFF60B47B), 
       sidePadding: size.width * 0.1, 
-      bottomPadding: size.height * 0.85
+      bottomPadding: size.height * 0.05
     );
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(deleteLeaveMessage).closed.then((value) {
         leavesList.removeAt(index);
-        commentsController.removeAt(index);
-        isEdited.removeAt(index);
+  
         leavesListAPI(context);
       },);
     }else{
@@ -325,30 +362,17 @@ class ApiProvider extends ChangeNotifier{
       message: decodedResponse['message'], 
       backgroundColor: const Color(0xFF60B47B), 
       sidePadding: size.width * 0.1, 
-      bottomPadding: size.height * 0.85
+      bottomPadding: size.height * 0.05
     );
     if (response.statusCode == 200 && decodedResponse['status'] == "success") {
-      ScaffoldMessenger.of(context).showSnackBar(updateLeaveMessage).closed.then((value) {
-        isEdited[index] = !isEdited[index];
-        leavesListAPI(context);
+      ScaffoldMessenger.of(context).showSnackBar(updateLeaveMessage).closed.then((value) async {
+        await leavesListAPI(context);
       },);
+      notifyListeners();
     }else{
-        ScaffoldMessenger.of(context).showSnackBar(updateLeaveMessage);
+      ScaffoldMessenger.of(context).showSnackBar(updateLeaveMessage);
       print('Error: $decodedResponse');
     }
-  }
-
-  void editLeave(int index){
-    if (!isEdited[index]) {
-      isEdited[index] = !isEdited[index];
-    }
-    notifyListeners();
-  }
-
-  void cancelLeave(int index){
-    editedStartDate[index] = "";
-    editedEndDate[index] = "";
-    isEdited[index] = !isEdited[index];
     notifyListeners();
   }
 
@@ -363,9 +387,14 @@ class ApiProvider extends ChangeNotifier{
     final decodedResponse = json.decode(decryptedResponse);
     debugPrint('Delivery List Response: $decodedResponse, Status code: ${response.statusCode}', wrapWidth: 1064);
     if(response.statusCode == 200 && decodedResponse["status"] == "success"){
-      List<dynamic> results = decodedResponse['location_data'] as List;
-      // deliveryProductsList.clear();
-      deliveryProductsList = results.map((result) => DeliveryProducts.fromJson(result)).toList();
+      if (decodedResponse["location_data"].isEmpty) {
+        throw const HttpException("Delivery data is empty");
+      }else{
+        List<dynamic> results = decodedResponse['location_data'] as List;
+        deliveryProductsList.clear();
+        deliveryProductsList = results.map((result) => DeliveryProducts.fromJson(result)).toList();
+        throw Exception("Data found");
+      }
     }else{ 
       print('Error in customer Location $decodedResponse');
     }
@@ -408,9 +437,6 @@ class ApiProvider extends ChangeNotifier{
     customerOrderProducts.clear();
     leavesList.clear();
     skuPickList.clear();
-    editedEndDate.clear();
-    editedStartDate.clear();
-    commentsController.clear();
     Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const LoginPage(),), (route)=> false);
     notifyListeners();
   }
@@ -516,7 +542,7 @@ class ApiProvider extends ChangeNotifier{
   void confirmDeleteLeave(BuildContext context, Size size, int leaveId, int index){
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (builderContext) {
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0), // Set your desired border radius
@@ -567,7 +593,7 @@ class ApiProvider extends ChangeNotifier{
                       overlayColor: Colors.transparent.withOpacity(0.1)
                     ),
                     onPressed: () async{
-                      Navigator.pop(context);
+                      Navigator.pop(builderContext);
                       await deleteLeave(leaveId, size, index, context);
                       
                     }, 
@@ -591,7 +617,7 @@ class ApiProvider extends ChangeNotifier{
                       overlayColor: Colors.transparent.withOpacity(0.1)
                     ),
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(builderContext);
                     }, 
                     child: const TextWidget(text: "Cancel", fontSize: 14, fontWeight: FontWeight.w400, fontColor: Colors.grey,)
                   ),
@@ -605,4 +631,49 @@ class ApiProvider extends ChangeNotifier{
     );
   
   }
+    
+  void messagePopup(BuildContext context, Size size, String image, String message){
+    showDialog(
+      context: context, 
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          elevation: 0,
+          // backgroundColor: Colors.transparent.withOpacity(0.1),
+          child: SizedBox(
+            height: size.height * 0.3,
+            // width: size.width * 0.,
+            child: Column(
+              // crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                const SizedBox(height: 30,),
+                Center(
+                  child: SizedBox(
+                    height: size.height * 0.1,
+                    width:  size.width * 0.2,
+                    child: Image.asset(
+                      "assets/happy-face.png",
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                
+                TextWidget(text: "Order Placed Successfully", fontSize: 20, fontWeight: FontWeight.w500, fontColor: Theme.of(context).primaryColorDark,),
+                // const SizedBox(height: 10,),
+                TextWidget(text: "Thank you!", fontSize: 16, fontWeight: FontWeight.w400, fontColor: Theme.of(context).primaryColorDark,),
+                const SizedBox(height: 30,),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+
+  
 }
