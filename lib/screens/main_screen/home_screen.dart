@@ -114,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       body: DefaultTabController(
         length: 3,
         child: CustomScrollView(
+          physics: const NeverScrollableScrollPhysics(),
           slivers: [
            SliverAppBar(
               expandedHeight: size.height * 0.15,
@@ -184,7 +185,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   Padding(
                     padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
                     child: TabBar(
-                      key: const PageStorageKey('tab'),
                       overlayColor: WidgetStatePropertyAll(Colors.transparent.withOpacity(0.0)),
                       controller: _tabController,
                       labelPadding: const EdgeInsets.symmetric(horizontal: 8),

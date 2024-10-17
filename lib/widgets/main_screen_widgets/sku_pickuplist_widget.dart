@@ -56,223 +56,85 @@ class SkuPickuplistWidget extends StatelessWidget {
           children: [
             CupertinoScrollbar(
               controller: _scrollController,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      provider.skuPickList.isEmpty
-                      ? Container()
-                      : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const TextWidget(
-                            text: 'Subscribed Product', 
-                            fontSize: 16, 
-                            fontWeight: FontWeight.w500
-                          ),
-                          // Subscribed products list
-                          SizedBox(
-                            height: provider.skuPickList.length * 100,
-                          // Subscribed products list
-                            child: ListView.builder(
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: provider.skuPickList.length,
-                              itemBuilder: (context, index) {
-                                SkuProduct product = provider.skuPickList[index];
-                                return Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      height: 80,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.grey.shade400),
-                                        borderRadius: BorderRadius.circular(8)
-                                      ),
-                                      child: Center(
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                              // Product Name and Product Morning and evening Quantity
-                                            Column(
-                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                SizedBox(
-                                                  width: size.width * 0.55,
-                                                  child: TextWidget(
-                                                    text: '${product.productName}(${product.quantity})', 
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
-                                                    maxLines: 1,
-                                                    textOverflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                  SizedBox(
-                                                  width: size.width * 0.5,
-                                                  child: TextWidget(
-                                                    text: 'Morning: ${product.mrgQty.toString()} - Evening: ${product.evgQty.toString()}',
-                                                    textOverflow: TextOverflow.ellipsis,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w300,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            // Product price and Increment counter
-                                            Column(
-                                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                TextWidget(
-                                                  text:'Price : ₹${product.productPrice.toString()}', 
-                                                  fontSize: 14, 
-                                                  fontWeight: FontWeight.w600, 
-                                                  fontColor: const Color(0xFF60B47B)
-                                                ),
-                                                Container(
-                                                  height: size.height * 0.04,
-                                                  width: size.width * 0.22,
-                                                  decoration: BoxDecoration(
-                                                    border: Border.all(color: Colors.grey.shade400),
-                                                    borderRadius: BorderRadius.circular(8)
-                                                  ),
-                                                  child: Row(
-                                                    children: [
-                                                      // Product Quantity decrease
-                                                      GestureDetector(
-                                                        onTap: (){
-                                                          provider.additionalSku(product.productId, false);
-                                                        },
-                                                        child: Container(
-                                                          width: size.width * 0.07,
-                                                          height: size.height * 0.04,
-                                                          decoration: BoxDecoration(
-                                                            borderRadius: const BorderRadius.only(
-                                                              topLeft: Radius.circular(8),
-                                                              bottomLeft: Radius.circular(8)
-                                                            ),
-                                                            border: Border(right: BorderSide(color: Colors.grey.shade400,))
-                                                          ),
-                                                          child: const Icon(Icons.remove, size: 15,),
-                                                        ),
-                                                      ),
-                                                      // Product Quantity Count
-                                                      SizedBox(
-                                                        width: size.width * 0.07,
-                                                        child: Center(
-                                                          child: Text(
-                                                            '${provider.additonalSkuQuantities[product.productId]}',
-                                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      // Product Quantity increase
-                                                      GestureDetector(
-                                                        onTap: (){
-                                                          provider.additionalSku(product.productId, true);
-                                                        },
-                                                        child: Container(
-                                                          width: size.width * 0.07,
-                                                          height: size.height * 0.04,
-                                                          decoration: BoxDecoration(
-                                                            borderRadius: const BorderRadius.only(
-                                                              topRight: Radius.circular(8),
-                                                              bottomRight: Radius.circular(8)
-                                                            ),
-                                                            border: Border(left: BorderSide(color: Colors.grey.shade400,))
-                                                          ),
-                                                          child: Icon(
-                                                            Icons.add, 
-                                                            size: 15,
-                                                            color: provider.additonalSkuQuantities[product.productId]! >= 1 
-                                                            ? const Color(0xFF60B47B)
-                                                            :  Colors.black,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              
-                                              ],
-                                            ),  
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10,)
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 5,),
-                      provider.orderedProducts.isNotEmpty
-                      // Ordered Products
-                      ? Column(
+              child: RefreshIndicator(
+                onRefresh: () async => await provider.skuListAPI(),
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        provider.skuPickList.isEmpty
+                        ? Container()
+                        : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Order Products Heading
-                            const Text('Ordered Product', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),),
-                            const SizedBox(height: 5,),
-                            // Ordered products list
+                            const TextWidget(
+                              text: 'Subscribed Product', 
+                              fontSize: 16, 
+                              fontWeight: FontWeight.w500
+                            ),
+                            // Subscribed products list
                             SizedBox(
-                              height: provider.orderedProducts.length * size.height * 0.13,
+                              height: provider.skuPickList.length * 100,
+                            // Subscribed products list
                               child: ListView.builder(
                                 physics: const NeverScrollableScrollPhysics(),
-                                itemCount: provider.orderedProducts.length,
+                                itemCount: provider.skuPickList.length,
                                 itemBuilder: (context, index) {
-                                  OrderedProductsModel product = provider.orderedProducts[index];
+                                  SkuProduct product = provider.skuPickList[index];
                                   return Column(
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.all(10),
-                                        height: size.height * 0.1,
+                                        height: 80,
                                         decoration: BoxDecoration(
                                           border: Border.all(color: Colors.grey.shade400),
                                           borderRadius: BorderRadius.circular(8)
                                         ),
                                         child: Center(
                                           child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment: CrossAxisAlignment.center,
                                             children: [
-                                              // Product Name and Product Price
+                                                // Product Name and Product Morning and evening Quantity
                                               Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   SizedBox(
                                                     width: size.width * 0.55,
                                                     child: TextWidget(
-                                                      text: '${product.productName}(Qty: ${product.quantity})', 
+                                                      text: '${product.productName}(${product.quantity})', 
                                                       fontSize: 14,
                                                       fontWeight: FontWeight.w600,
                                                       maxLines: 1,
                                                       textOverflow: TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  SizedBox(
+                                                    SizedBox(
                                                     width: size.width * 0.5,
                                                     child: TextWidget(
-                                                      text:'Price : ₹${product.price.toString()}', 
-                                                      fontSize: 14, 
-                                                      fontWeight: FontWeight.w600, 
-                                                      fontColor: const Color(0xFF60B47B)
+                                                      text: 'Morning: ${product.mrgQty.toString()} - Evening: ${product.evgQty.toString()}',
+                                                      textOverflow: TextOverflow.ellipsis,
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w300,
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                              // Product Description and increment counter
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              // Product price and Increment counter
+                                              Column(
+                                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
+                                                  TextWidget(
+                                                    text:'Price : ₹${product.productPrice.toString()}', 
+                                                    fontSize: 14, 
+                                                    fontWeight: FontWeight.w600, 
+                                                    fontColor: const Color(0xFF60B47B)
+                                                  ),
                                                   Container(
                                                     height: size.height * 0.04,
                                                     width: size.width * 0.22,
@@ -285,12 +147,7 @@ class SkuPickuplistWidget extends StatelessWidget {
                                                         // Product Quantity decrease
                                                         GestureDetector(
                                                           onTap: (){
-                                                            provider.additionalOrder(index, false);
-                                                            // setState(() {
-                                                            //   if (provider.orderedProductsAdditionalQuantities[index] > 0) {
-                                                            //     provider.orderedProductsAdditionalQuantities[index] = provider.orderedProductsAdditionalQuantities[index] - 1;
-                                                            //   }
-                                                            // });
+                                                            provider.additionalSku(product.productId, false);
                                                           },
                                                           child: Container(
                                                             width: size.width * 0.07,
@@ -310,7 +167,7 @@ class SkuPickuplistWidget extends StatelessWidget {
                                                           width: size.width * 0.07,
                                                           child: Center(
                                                             child: Text(
-                                                              '${provider.orderedProductsAdditionalQuantities[index]}',
+                                                              '${provider.additonalSkuQuantities[product.productId]}',
                                                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                                                             ),
                                                           ),
@@ -318,10 +175,7 @@ class SkuPickuplistWidget extends StatelessWidget {
                                                         // Product Quantity increase
                                                         GestureDetector(
                                                           onTap: (){
-                                                            provider.additionalOrder(index, true);
-                                                            //   setState(() {
-                                                            //   provider.orderedProductsAdditionalQuantities[index] = provider.orderedProductsAdditionalQuantities[index] + 1;
-                                                            // });
+                                                            provider.additionalSku(product.productId, true);
                                                           },
                                                           child: Container(
                                                             width: size.width * 0.07,
@@ -336,7 +190,7 @@ class SkuPickuplistWidget extends StatelessWidget {
                                                             child: Icon(
                                                               Icons.add, 
                                                               size: 15,
-                                                              color: provider.orderedProductsAdditionalQuantities[index] >= 1 
+                                                              color: provider.additonalSkuQuantities[product.productId]! >= 1 
                                                               ? const Color(0xFF60B47B)
                                                               :  Colors.black,
                                                             ),
@@ -345,172 +199,321 @@ class SkuPickuplistWidget extends StatelessWidget {
                                                       ],
                                                     ),
                                                   ),
+                                                
                                                 ],
-                                              ),
+                                              ),  
                                             ],
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(height: 10,),
+                                      const SizedBox(height: 10,)
                                     ],
                                   );
                                 },
                               ),
                             ),
                           ],
-                        )
-                      : Container(),
-                      const SizedBox(height: 5,),
-                      // All Products Heading
-                      const Text('All Products', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),),
-                      const SizedBox(height: 5,),
-                      // All products 
-                      SizedBox(
-                        height: provider.allProducts.length * 100,
-                        child: ListView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: provider.allProducts.length,
-                          itemBuilder: (context, index) {
-                            ProductsModel product = provider.allProducts[index];
-                            return Column(
-                              children: [
-                                Container(
-                                  // height: size.height * 0.12,
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.grey.shade400),
-                                  ),
-                                  child: Center(
-                                    child: Row(
-                                      // crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        ),
+                        const SizedBox(height: 5,),
+                        provider.orderedProducts.isNotEmpty
+                        // Ordered Products
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Order Products Heading
+                              const Text('Ordered Product', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),),
+                              const SizedBox(height: 5,),
+                              // Ordered products list
+                              SizedBox(
+                                height: provider.orderedProducts.length * size.height * 0.13,
+                                child: ListView.builder(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: provider.orderedProducts.length,
+                                  itemBuilder: (context, index) {
+                                    OrderedProductsModel product = provider.orderedProducts[index];
+                                    return Column(
                                       children: [
-                                        // Product Name and Product Description
-                                        Column(
-                                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(
-                                              width: size.width * 0.55,
-                                              child: TextWidget(
-                                                text: '${product.name}(Qty: ${product.quantity})', 
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                maxLines: 1,
-                                                textOverflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: size.width * 0.5,
-                                              child: TextWidget(
-                                                text:  product.description.replaceAll("<p>", ""),
-                                                textOverflow: TextOverflow.ellipsis,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w300,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        // Product Description and increment counter
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            TextWidget(
-                                              text:'Price : ₹${product.finalPrice.toString()}', 
-                                              fontSize: 14, 
-                                              fontWeight: FontWeight.w600, 
-                                              fontColor: const Color(0xFF60B47B)
-                                            ),
-                                            Container(
-                                              height: size.height * 0.04,
-                                              width: size.width * 0.22,
-                                              decoration: BoxDecoration(
-                                                border: Border.all(color: Colors.grey.shade400),
-                                                borderRadius: BorderRadius.circular(8)
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  // Product Quantity decrease
-                                                  GestureDetector(
-                                                    onTap: (){
-                                                      // setState(() {
-                                                      //   if (provider.additionalProductQuantities[product.id]! > 0) {
-                                                      //     provider.additionalProductQuantities[product.id] = provider.additionalProductQuantities[product.id]! - 1;
-                                                      //   }
-                                                      // });
-                                                      provider.additionalProduct(product.id, false);
-                                                    },
-                                                    child: Container(
-                                                      width: size.width * 0.07,
+                                        Container(
+                                          padding: const EdgeInsets.all(10),
+                                          height: size.height * 0.1,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: Colors.grey.shade400),
+                                            borderRadius: BorderRadius.circular(8)
+                                          ),
+                                          child: Center(
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                // Product Name and Product Price
+                                                Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: size.width * 0.55,
+                                                      child: TextWidget(
+                                                        text: '${product.productName}(Qty: ${product.quantity})', 
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w600,
+                                                        maxLines: 1,
+                                                        textOverflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ),
+                                                    SizedBox(
+                                                      width: size.width * 0.5,
+                                                      child: TextWidget(
+                                                        text:'Price : ₹${product.price.toString()}', 
+                                                        fontSize: 14, 
+                                                        fontWeight: FontWeight.w600, 
+                                                        fontColor: const Color(0xFF60B47B)
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                // Product Description and increment counter
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Container(
                                                       height: size.height * 0.04,
+                                                      width: size.width * 0.22,
                                                       decoration: BoxDecoration(
-                                                        borderRadius: const BorderRadius.only(
-                                                          topLeft: Radius.circular(8),
-                                                          bottomLeft: Radius.circular(8)
-                                                        ),
-                                                        border: Border(right: BorderSide(color: Colors.grey.shade400,))
+                                                        border: Border.all(color: Colors.grey.shade400),
+                                                        borderRadius: BorderRadius.circular(8)
                                                       ),
-                                                      child: const Icon(Icons.remove, size: 15,),
+                                                      child: Row(
+                                                        children: [
+                                                          // Product Quantity decrease
+                                                          GestureDetector(
+                                                            onTap: (){
+                                                              provider.additionalOrder(index, false);
+                                                              // setState(() {
+                                                              //   if (provider.orderedProductsAdditionalQuantities[index] > 0) {
+                                                              //     provider.orderedProductsAdditionalQuantities[index] = provider.orderedProductsAdditionalQuantities[index] - 1;
+                                                              //   }
+                                                              // });
+                                                            },
+                                                            child: Container(
+                                                              width: size.width * 0.07,
+                                                              height: size.height * 0.04,
+                                                              decoration: BoxDecoration(
+                                                                borderRadius: const BorderRadius.only(
+                                                                  topLeft: Radius.circular(8),
+                                                                  bottomLeft: Radius.circular(8)
+                                                                ),
+                                                                border: Border(right: BorderSide(color: Colors.grey.shade400,))
+                                                              ),
+                                                              child: const Icon(Icons.remove, size: 15,),
+                                                            ),
+                                                          ),
+                                                          // Product Quantity Count
+                                                          SizedBox(
+                                                            width: size.width * 0.07,
+                                                            child: Center(
+                                                              child: Text(
+                                                                '${provider.orderedProductsAdditionalQuantities[index]}',
+                                                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          // Product Quantity increase
+                                                          GestureDetector(
+                                                            onTap: (){
+                                                              provider.additionalOrder(index, true);
+                                                              //   setState(() {
+                                                              //   provider.orderedProductsAdditionalQuantities[index] = provider.orderedProductsAdditionalQuantities[index] + 1;
+                                                              // });
+                                                            },
+                                                            child: Container(
+                                                              width: size.width * 0.07,
+                                                              height: size.height * 0.04,
+                                                              decoration: BoxDecoration(
+                                                                borderRadius: const BorderRadius.only(
+                                                                  topRight: Radius.circular(8),
+                                                                  bottomRight: Radius.circular(8)
+                                                                ),
+                                                                border: Border(left: BorderSide(color: Colors.grey.shade400,))
+                                                              ),
+                                                              child: Icon(
+                                                                Icons.add, 
+                                                                size: 15,
+                                                                color: provider.orderedProductsAdditionalQuantities[index] >= 1 
+                                                                ? const Color(0xFF60B47B)
+                                                                :  Colors.black,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
-                                                  ),
-                                                  // Product Quantity Count
-                                                  SizedBox(
-                                                    width: size.width * 0.07,
-                                                    child: Center(
-                                                      child: Text(
-                                                        '${provider.additionalProductQuantities[product.id]}',
-                                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  // Product Quantity increase
-                                                  GestureDetector(
-                                                    onTap: (){
-                                                      //   setState(() {
-                                                      //   provider.additionalProductQuantities[product.id] = provider.additionalProductQuantities[product.id]! + 1;
-                                                      // });
-                                                      provider.additionalProduct(product.id, true);
-                                                    },
-                                                    child: Container(
-                                                      width: size.width * 0.07,
-                                                      height: size.height * 0.04,
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: const BorderRadius.only(
-                                                          topRight: Radius.circular(8),
-                                                          bottomRight: Radius.circular(8)
-                                                        ),
-                                                        border: Border(left: BorderSide(color: Colors.grey.shade400,))
-                                                      ),
-                                                      child: Icon(
-                                                        Icons.add, 
-                                                        size: 15,
-                                                        color: provider.additionalProductQuantities[product.id]! >= 1 
-                                                        ? const Color(0xFF60B47B)
-                                                        :  Colors.black,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                                  ],
+                                                ),
+                                              ],
                                             ),
-                                            const SizedBox(height: 10,),
-                                          ],
+                                          ),
                                         ),
+                                        const SizedBox(height: 10,),
                                       ],
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          )
+                        : Container(),
+                        const SizedBox(height: 5,),
+                        // All Products Heading
+                        const Text('All Products', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),),
+                        const SizedBox(height: 5,),
+                        // All products 
+                        SizedBox(
+                          height: provider.allProducts.length * 100,
+                          child: ListView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: provider.allProducts.length,
+                            itemBuilder: (context, index) {
+                              ProductsModel product = provider.allProducts[index];
+                              return Column(
+                                children: [
+                                  Container(
+                                    // height: size.height * 0.12,
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.grey.shade400),
+                                    ),
+                                    child: Center(
+                                      child: Row(
+                                        // crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          // Product Name and Product Description
+                                          Column(
+                                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              SizedBox(
+                                                width: size.width * 0.55,
+                                                child: TextWidget(
+                                                  text: '${product.name}(Qty: ${product.quantity})', 
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  maxLines: 1,
+                                                  textOverflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: size.width * 0.5,
+                                                child: TextWidget(
+                                                  text:  product.description.replaceAll("<p>", ""),
+                                                  textOverflow: TextOverflow.ellipsis,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w300,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          // Product Description and increment counter
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              TextWidget(
+                                                text:'Price : ₹${product.finalPrice.toString()}', 
+                                                fontSize: 14, 
+                                                fontWeight: FontWeight.w600, 
+                                                fontColor: const Color(0xFF60B47B)
+                                              ),
+                                              Container(
+                                                height: size.height * 0.04,
+                                                width: size.width * 0.22,
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(color: Colors.grey.shade400),
+                                                  borderRadius: BorderRadius.circular(8)
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    // Product Quantity decrease
+                                                    GestureDetector(
+                                                      onTap: (){
+                                                        // setState(() {
+                                                        //   if (provider.additionalProductQuantities[product.id]! > 0) {
+                                                        //     provider.additionalProductQuantities[product.id] = provider.additionalProductQuantities[product.id]! - 1;
+                                                        //   }
+                                                        // });
+                                                        provider.additionalProduct(product.id, false);
+                                                      },
+                                                      child: Container(
+                                                        width: size.width * 0.07,
+                                                        height: size.height * 0.04,
+                                                        decoration: BoxDecoration(
+                                                          borderRadius: const BorderRadius.only(
+                                                            topLeft: Radius.circular(8),
+                                                            bottomLeft: Radius.circular(8)
+                                                          ),
+                                                          border: Border(right: BorderSide(color: Colors.grey.shade400,))
+                                                        ),
+                                                        child: const Icon(Icons.remove, size: 15,),
+                                                      ),
+                                                    ),
+                                                    // Product Quantity Count
+                                                    SizedBox(
+                                                      width: size.width * 0.07,
+                                                      child: Center(
+                                                        child: Text(
+                                                          '${provider.additionalProductQuantities[product.id]}',
+                                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    // Product Quantity increase
+                                                    GestureDetector(
+                                                      onTap: (){
+                                                        //   setState(() {
+                                                        //   provider.additionalProductQuantities[product.id] = provider.additionalProductQuantities[product.id]! + 1;
+                                                        // });
+                                                        provider.additionalProduct(product.id, true);
+                                                      },
+                                                      child: Container(
+                                                        width: size.width * 0.07,
+                                                        height: size.height * 0.04,
+                                                        decoration: BoxDecoration(
+                                                          borderRadius: const BorderRadius.only(
+                                                            topRight: Radius.circular(8),
+                                                            bottomRight: Radius.circular(8)
+                                                          ),
+                                                          border: Border(left: BorderSide(color: Colors.grey.shade400,))
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.add, 
+                                                          size: 15,
+                                                          color: provider.additionalProductQuantities[product.id]! >= 1 
+                                                          ? const Color(0xFF60B47B)
+                                                          :  Colors.black,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10,),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                provider.allProducts.length == index
-                                ? const SizedBox(height: 200,) : const SizedBox(height: 10,),
-                              ],
-                            );
-                          },
-                        ),
-                      ),  
-                      // const SizedBox(height: 75,),
-                    ],
+                                  provider.allProducts.length == index
+                                  ? const SizedBox(height: 200,) : const SizedBox(height: 10,),
+                                ],
+                              );
+                            },
+                          ),
+                        ),  
+                        // const SizedBox(height: 75,),
+                      ],
+                    ),
                   ),
                 ),
               ),

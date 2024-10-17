@@ -52,137 +52,141 @@ class _CustomerAddressWidgetState extends State<CustomerAddressWidget> {
   Widget addressList(Size size, BuildContext context){
     return Consumer<ApiProvider>(
       builder: (context, provider, child) {
-        return CupertinoScrollbar(
-          controller: _controller,
-          child: ListView.builder(
+        return RefreshIndicator(
+          onRefresh: () async => await provider.customerAddressList(),
+          child: CupertinoScrollbar(
             controller: _controller,
-            itemCount: provider.addressList.length,
-            itemBuilder: (context, index) {
-              CustomerAddress address = provider.addressList[index];
-              return Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 10,),
-                child: Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300)
-                    ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: size.width * 0.65,
-                              child: TextWidget(
-                                text: '${address.firstName} ${address.lastName}',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600                    
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                GestureDetector(
-                                  onTap: (){
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => UpdateLocation(
-                                      name: '${address.firstName} ${address.lastName}',
-                                      customerId: address.customerId,
-                                      addressId: address.addressId,
-                                      ),
-                                    ));
-                                  },
-                                  child: Icon(
-                                    CupertinoIcons.map, 
-                                    color: Theme.of(context).primaryColor,
-                                  ),
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              controller: _controller,
+              itemCount: provider.addressList.length,
+              itemBuilder: (context, index) {
+                CustomerAddress address = provider.addressList[index];
+                return Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20, top: 10,),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300)
+                      ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: size.width * 0.65,
+                                child: TextWidget(
+                                  text: '${address.firstName} ${address.lastName}',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600                    
                                 ),
-                                const SizedBox(width: 15,),
-                                GestureDetector(
-                                  onTap: () async {
-                                    final Uri url = Uri(
-                                      scheme: 'tel',
-                                      path: address.mobileNo
-                                    );
-                                    await launchUrl(url);
-                                  },
-                                  child: Icon(
-                                    CupertinoIcons.phone,
-                                    color: Theme.of(context).primaryColor,
+                              ),
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: (){
+                                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => UpdateLocation(
+                                        name: '${address.firstName} ${address.lastName}',
+                                        customerId: address.customerId,
+                                        addressId: address.addressId,
+                                        ),
+                                      ));
+                                    },
+                                    child: Icon(
+                                      CupertinoIcons.map, 
+                                      color: Theme.of(context).primaryColor,
+                                    ),
                                   ),
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: 5,),
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: size.width * 0.2,
-                              child: const TextWidget(
-                                text: 'Contact: ', 
-                                fontSize: 15, 
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            TextWidget(
-                              text: address.mobileNo, 
-                              fontSize: 13, 
-                              // textDecoration: TextDecoration.underline, 
-                              fontWeight: FontWeight.w400, 
-                              fontColor: const Color(0xFF60B47B), 
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5,),
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: size.width * 0.2,
-                              child: const TextWidget(
-                                text: 'Email: ', 
-                                fontSize: 15, 
-                                fontWeight: FontWeight.bold
-                              ),
-                            ),
-                            TextWidget(
-                              text: address.email, 
-                              fontSize: 13, 
-                              fontWeight: FontWeight.w400, 
-                              fontColor: const Color(0xFF60B47B),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5,),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: size.width * 0.2,
-                              child: const TextWidget(
-                                text: 'Address: ', 
-                                fontSize: 15, 
-                                fontWeight: FontWeight.bold
+                                  const SizedBox(width: 15,),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final Uri url = Uri(
+                                        scheme: 'tel',
+                                        path: address.mobileNo
+                                      );
+                                      await launchUrl(url);
+                                    },
+                                    child: Icon(
+                                      CupertinoIcons.phone,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  )
+                                ],
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 5,),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: size.width * 0.2,
+                                child: const TextWidget(
+                                  text: 'Contact: ', 
+                                  fontSize: 15, 
+                                  fontWeight: FontWeight.bold,
                                 ),
-                            ),
-                            Expanded(
-                              child: TextWidget(
-                              text: '''${address.flatNo}, ${address.floor}, ${address.address}, ${address.landmark}, ${address.location}, ${address.region}''',   
-                              fontSize: 13,
-                              fontWeight: FontWeight.w400, 
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )
-                ),
-              );
-            }, 
+                              TextWidget(
+                                text: address.mobileNo, 
+                                fontSize: 13, 
+                                // textDecoration: TextDecoration.underline, 
+                                fontWeight: FontWeight.w400, 
+                                fontColor: const Color(0xFF60B47B), 
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5,),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: size.width * 0.2,
+                                child: const TextWidget(
+                                  text: 'Email: ', 
+                                  fontSize: 15, 
+                                  fontWeight: FontWeight.bold
+                                ),
+                              ),
+                              TextWidget(
+                                text: address.email, 
+                                fontSize: 13, 
+                                fontWeight: FontWeight.w400, 
+                                fontColor: const Color(0xFF60B47B),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5,),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: size.width * 0.2,
+                                child: const TextWidget(
+                                  text: 'Address: ', 
+                                  fontSize: 15, 
+                                  fontWeight: FontWeight.bold
+                                  ),
+                              ),
+                              Expanded(
+                                child: TextWidget(
+                                text: '''${address.flatNo}, ${address.floor}, ${address.address}, ${address.landmark}, ${address.location}, ${address.region}''',   
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400, 
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  ),
+                );
+              }, 
+            ),
           ),
         );
       
