@@ -78,7 +78,7 @@ class LeaveHistoryScreen extends StatelessWidget {
               // int differnece = DateTime.parse( provider.leavesList[index].endDate).difference(DateTime.parse(provider.leavesList[index].startDate)).inDays;
               String startDate = DateFormat("dd MMM yyyy").format(DateTime.parse(provider.leavesList[index].startDate));
               String endDate = DateFormat("dd MMM yyyy").format(DateTime.parse(provider.leavesList[index].endDate));
-              int difference = DateFormat("dd MMM yyyy").parse(endDate).difference(DateFormat("dd MMM yyyy").parse(startDate)).inDays;
+              // int difference = DateFormat("dd MMM yyyy").parse(endDate).difference(DateFormat("dd MMM yyyy").parse(startDate)).inDays;
               return Column(
                 children: [
                   Container(
@@ -96,13 +96,17 @@ class LeaveHistoryScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            TextWidget(
-                              text: difference == 0 
-                                ? 'One day application'
-                                : '${difference + 1} days application', 
-                              fontWeight: FontWeight.w500, 
-                              fontSize: 16,
-                              fontColor: Colors.grey,
+                            // comment 
+                             SizedBox(
+                              width: size.width*0.65,
+                              child: TextWidget(
+                                text: provider.leavesList[index].comments,
+                                maxLines: 1,
+                                textOverflow: TextOverflow.ellipsis, 
+                                fontWeight: FontWeight.w600, 
+                                fontSize: 16,
+                                fontColor: Colors.teal,
+                              ),
                             ),
                             // Icons
                             Row(
@@ -143,18 +147,18 @@ class LeaveHistoryScreen extends StatelessWidget {
                           fontWeight: FontWeight.w600, 
                           fontSize: 24
                         ),
-                        // Comments
-                        SizedBox(
-                          width: size.width*0.65,
-                          child: TextWidget(
-                            text: provider.leavesList[index].comments,
-                            maxLines: 1,
-                            textOverflow: TextOverflow.ellipsis, 
-                            fontWeight: FontWeight.w600, 
-                            fontSize: 16,
-                            fontColor: Colors.teal,
-                          ),
-                        ),
+                        // Status
+                        TextWidget(
+                              text: provider.leavesList[index].status == null 
+                                ? 'Pending'
+                                : provider.leavesList[index].status!, 
+                              fontWeight: FontWeight.w500, 
+                              fontSize: 16,
+                              fontColor:provider.leavesList[index].status == null 
+                              ?  Colors.red
+                              : Colors.grey,
+                            ),
+                       
                       ],
                     ),
                   ),

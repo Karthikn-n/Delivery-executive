@@ -7,6 +7,7 @@ import 'package:app_5/providers/connectivity_helper.dart';
 import 'package:app_5/repository/app_repository.dart';
 import 'package:app_5/screens/sub_screen/leave_history.dart';
 import 'package:app_5/service/api_service.dart';
+import 'package:app_5/widgets/common_widgets/button.dart';
 import 'package:app_5/widgets/common_widgets/snackbar_message.dart';
 import 'package:app_5/widgets/common_widgets/text_widget.dart';
 import 'package:app_5/widgets/common_widgets/text_field_widget.dart';
@@ -30,7 +31,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
   TextEditingController startDateController = TextEditingController();
   TextEditingController endDateController = TextEditingController();
   TextEditingController commentsController = TextEditingController();
-  
+  bool isApplying = false;
   @override
   void dispose() {
     super.dispose();
@@ -113,7 +114,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                     );
                     setState(() {
                       if (startTime != null) {
-                        startDateController.text = DateFormat("dd-MM-yyyy").format(startTime);
+                        startDateController.text = DateFormat("yyyy-MM-dd").format(startTime);
                       }else{
                         startDateController.text = "";
                       }
@@ -153,13 +154,13 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                     }else{
                       DateTime? endDate = await showDatePicker(
                         context: context, 
-                        firstDate: DateFormat("dd-MM-yyyy").parse(startDateController.text),
+                        firstDate: DateFormat("yyyy-MM-dd").parse(startDateController.text),
                         lastDate: DateTime(2100),
-                        initialDate: DateFormat("dd-MM-yyyy").parse(startDateController.text),
+                        initialDate: DateFormat("yyyy-MM-dd").parse(startDateController.text),
                       );
                       setState(() {
                         if (endDate != null) {
-                          endDateController.text = DateFormat("dd-MM-yyyy").format(endDate);
+                          endDateController.text = DateFormat("yyyy-MM-dd").format(endDate);
                         }else{
                           endDateController.text = "";
                         }
@@ -194,74 +195,70 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                 ),
                 const SizedBox(height: 20,),
                 Center(
-                  child: SizedBox(
-                    height: size.height * 0.06,
-                    width: size.width * 0.8,
-                    child: Consumer2<ApiProvider, ConnectivityService>(
-                        builder: (context, provider, connection, child) {
-                        return ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            shadowColor: Colors.white,
-                            overlayColor: Colors.white54,
-                            backgroundColor: const Color(0xFF60B47B),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            )
-                          ),
+                  child: Consumer2<ApiProvider, ConnectivityService>(
+                      builder: (context, provider, connection, child) {
+                      return isApplying
+                        ? const LoadingButton(width: double.infinity,)
+                        : ButtonWidget(
+                          width: double.infinity,
+                          title: "Apply", 
                           onPressed: () async {
-                            if (connection.isConnected) {
-                              if (formKey.currentState!.validate()) {
-                                Map<String, dynamic> applyLeaveData = {
-                                  "delivery_executive_id": prefs.getString("executiveId"),
-                                  "start_date": startDateController.text,
-                                  "end_date": endDateController.text,
-                                  "comments": commentsController.text
-                                };
-                                    
-                                final response = await leaveRepository.applyLeave(applyLeaveData);
-                                final decryptedResponse = decryptAES(response.body).replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), "");
-                                final decodedResponse = json.decode(decryptedResponse);
-                                print('Apply Leave Response: $decodedResponse, Status Code: ${response.statusCode}');
-                                final applyLeaveMessage = snackBarMessage(
-                                  context: context, 
-                                  message: decodedResponse['message'], 
+                            setState(() {
+                              isApplying = true;
+                            });
+                            try {
+                              if (connection.isConnected) {
+                                if (formKey.currentState!.validate()) {
+                                  Map<String, dynamic> applyLeaveData = {
+                                    "delivery_executive_id": prefs.getString("executiveId"),
+                                    "start_date": startDateController.text,
+                                    "end_date": endDateController.text,
+                                    "comments": commentsController.text
+                                  };
+                                      
+                                  final response = await leaveRepository.applyLeave(applyLeaveData);
+                                  final decryptedResponse = decryptAES(response.body).replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), "");
+                                  final decodedResponse = json.decode(decryptedResponse);
+                                  print('Apply Leave Response: $decodedResponse, Status Code: ${response.statusCode}');
+                                  final applyLeaveMessage = snackBarMessage(
+                                    context: context, 
+                                    message: decodedResponse['message'], 
+                                    backgroundColor: const Color(0xFF60B47B), 
+                                    sidePadding: size.width * 0.1, 
+                                    bottomPadding: size.height * 0.05
+                                  );
+                                  if (response.statusCode == 200) {
+                                    ScaffoldMessenger.of(context).showSnackBar(applyLeaveMessage).closed.then((value) async {
+                                      startDateController.clear();
+                                      endDateController.clear();
+                                      commentsController.clear();
+                                      provider.leavesListAPI(context);
+                                    },);
+                                  }else{
+                                    print('Error: $decodedResponse');
+                                  }
+                                }
+                              }else{
+                                ScaffoldMessenger.of(context).showSnackBar(snackBarMessage(
+                                    context: context, 
+                                  message: "No internet!", 
                                   backgroundColor: const Color(0xFF60B47B), 
                                   sidePadding: size.width * 0.1, 
                                   bottomPadding: size.height * 0.05
-                                );
-                                if (response.statusCode == 200) {
-                                  ScaffoldMessenger.of(context).showSnackBar(applyLeaveMessage).closed.then((value) async {
-                                    startDateController.clear();
-                                    endDateController.clear();
-                                    commentsController.clear();
-                                    provider.leavesListAPI(context);
-                                  },);
-                                }else{
-                                  print('Error: $decodedResponse');
-                                }
+                                ));
                               }
-                            }else{
-                              ScaffoldMessenger.of(context).showSnackBar(snackBarMessage(
-                                  context: context, 
-                                message: "No internet!", 
-                                backgroundColor: const Color(0xFF60B47B), 
-                                sidePadding: size.width * 0.1, 
-                                bottomPadding: size.height * 0.05
-                              ));
+                            } catch (e) {
+                              print("Can't apply leave: $e");
+                            }  finally {
+                              setState(() {
+                                isApplying = false;
+                              });
+                              
                             }
-                          }, 
-                          child: const Text(
-                            'Apply',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white
-                            ),
-                          )
+                          },
                         );
-                      }
-                    ),
+                      
+                    }
                   ),
                 )
               ],

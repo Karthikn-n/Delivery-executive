@@ -299,13 +299,13 @@ class _MapScreenState extends State<MapScreen> {
                                 String decryptedResponse= decryptAES(response.body).replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), '');
                                 final decodedResponse = json.decode(decryptedResponse);
                                 print('Updated Delivery Response: $decodedResponse, Status Code: ${response.statusCode}');
-                                final deliveredMessage = snackBarMessage(
-                                  context: context, 
-                                  message: decodedResponse['message'], 
-                                  backgroundColor: const Color(0xFF60B47B), 
-                                  sidePadding: MediaQuery.sizeOf(context).width * 0.1,
-                                  bottomPadding: MediaQuery.sizeOf(context).width * 0.05,
-                                );
+                                // final deliveredMessage = snackBarMessage(
+                                //   context: context, 
+                                //   message: decodedResponse['message'], 
+                                //   backgroundColor: const Color(0xFF60B47B), 
+                                //   sidePadding: MediaQuery.sizeOf(context).width * 0.1,
+                                //   bottomPadding: MediaQuery.sizeOf(context).width * 0.05,
+                                // );
                                 if (response.statusCode == 200 && decodedResponse['status'] == "success") {
                                   provider.messagePopup(context, MediaQuery.sizeOf(context), "assets/happy-face.png", "Order Delivered Successfully");
                                   // Navigator.pop(dialogContext);
