@@ -149,18 +149,15 @@ class LeaveHistoryScreen extends StatelessWidget {
                         ),
                         // Status
                         TextWidget(
-                              text: provider.leavesList[index].status == null 
-                                ? 'Pending'
-                                : provider.leavesList[index].status!, 
-                              fontWeight: FontWeight.w500, 
-                              fontSize: 16,
-                              fontColor: provider.leavesList[index].status == "Pending" 
-                                ? Colors.orange
-                                : provider.leavesList[index].status == "Rejected"
-                                  ? Colors.red
-                                  : Theme.of(context).primaryColor
-                            ),
-                       
+                          text: provider.leavesList[index].status, 
+                          fontWeight: FontWeight.w500, 
+                          fontSize: 16,
+                          fontColor: provider.leavesList[index].status == "Pending"
+                            ? Colors.orange
+                            : provider.leavesList[index].status == "Rejected"
+                              ? Colors.red
+                              : Theme.of(context).primaryColor
+                        ),
                       ],
                     ),
                   ),

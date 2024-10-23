@@ -3,14 +3,14 @@ class LeavesModel{
   final String startDate;
   final String endDate;
   final String comments;
-  final String? status;
+  final String status;
 
   LeavesModel({
     required this.leaveId,
     required this.startDate,
     required this.endDate,
     required this.comments,
-    this.status,
+    required this.status,
   });
 
   Map<String, dynamic> toMap(){
