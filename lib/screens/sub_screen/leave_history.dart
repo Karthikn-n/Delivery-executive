@@ -105,7 +105,7 @@ class LeaveHistoryScreen extends StatelessWidget {
                                 textOverflow: TextOverflow.ellipsis, 
                                 fontWeight: FontWeight.w600, 
                                 fontSize: 16,
-                                fontColor: Colors.teal,
+                                fontColor: Colors.grey,
                               ),
                             ),
                             // Icons
@@ -154,9 +154,11 @@ class LeaveHistoryScreen extends StatelessWidget {
                                 : provider.leavesList[index].status!, 
                               fontWeight: FontWeight.w500, 
                               fontSize: 16,
-                              fontColor:provider.leavesList[index].status == null 
-                              ?  Colors.red
-                              : Colors.grey,
+                              fontColor: provider.leavesList[index].status == "Pending" 
+                                ? Colors.orange
+                                : provider.leavesList[index].status == "Rejected"
+                                  ? Colors.red
+                                  : Theme.of(context).primaryColor
                             ),
                        
                       ],
