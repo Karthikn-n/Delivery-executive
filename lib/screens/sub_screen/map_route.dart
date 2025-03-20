@@ -990,9 +990,9 @@ class _MapScreenState extends State<MapScreen> {
                               elevation: WidgetStateProperty.all(0),
                               maximumSize: WidgetStatePropertyAll(size),
                               shape: WidgetStateProperty.all(const CircleBorder()),
-                              shadowColor: WidgetStatePropertyAll(Colors.transparent.withOpacity(0.1)),
+                              shadowColor: WidgetStatePropertyAll(Colors.transparent.withValues(alpha: 0.1)),
                               padding: const WidgetStatePropertyAll(EdgeInsets.only(top: 20)),
-                              surfaceTintColor: WidgetStateProperty.all(Colors.transparent.withOpacity(0.0))
+                              surfaceTintColor: WidgetStateProperty.all(Colors.transparent.withValues(alpha: 0.0))
                             ),
                             child: Center(
                               child: Column(

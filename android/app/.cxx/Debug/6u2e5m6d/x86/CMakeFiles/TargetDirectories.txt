@@ -1,0 +1,2 @@
+D:/Projects/PasumaiBoomi/Delivery-executive/android/app/.cxx/Debug/6u2e5m6d/x86/CMakeFiles/edit_cache.dir
+D:/Projects/PasumaiBoomi/Delivery-executive/android/app/.cxx/Debug/6u2e5m6d/x86/CMakeFiles/rebuild_cache.dir

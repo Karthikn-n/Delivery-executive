@@ -67,7 +67,7 @@ class TextFields extends StatelessWidget {
         validator: validator,
         style: TextStyle(
           fontSize: 15,
-          color: const Color(0xFF656872).withOpacity(1.0)
+          color: const Color(0xFF656872).withValues(alpha: 1.0)
         ),
         decoration: InputDecoration(
           prefixIcon: prefixIcon,
@@ -76,35 +76,35 @@ class TextFields extends StatelessWidget {
           labelStyle: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color:Colors.grey.withOpacity(0.5)
+            color:Colors.grey.withValues(alpha: 0.5)
           ),
           floatingLabelStyle: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w500,
-            color:Colors.grey.withOpacity(0.5)
+            color:Colors.grey.withValues(alpha: 0.5)
           ),
           suffixIcon: suffixIcon,
-          suffixIconColor: const Color(0xFF656872).withOpacity(1.0),
+          suffixIconColor: const Color(0xFF656872).withValues(alpha: 1.0),
           hintText: hintText,
           hintStyle: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color:Colors.grey.withOpacity(0.5)
+            color:Colors.grey.withValues(alpha: 0.5)
           ),
           filled: true,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 10),
             borderSide: BorderSide(
-              color: borderColor ?? const Color(0xFF656872).withOpacity(0.1)
+              color: borderColor ?? const Color(0xFF656872).withValues(alpha: 0.1)
             )
           ),
           disabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 10),
             borderSide: BorderSide(
-              color:  borderColor ?? const Color(0xFF656872).withOpacity(0.1)
+              color:  borderColor ?? const Color(0xFF656872).withValues(alpha: 0.1)
             )
           ),
-          fillColor: const Color(0xFF656872).withOpacity(0.1),
+          fillColor: const Color(0xFF656872).withValues(alpha: 0.1),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 10),
             borderSide: const BorderSide(
@@ -114,13 +114,13 @@ class TextFields extends StatelessWidget {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 10),
             borderSide: BorderSide(
-              color:  borderColor ?? const Color(0xFF656872).withOpacity(0.1)
+              color:  borderColor ?? const Color(0xFF656872).withValues(alpha: 0.1)
             )
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 10),
             borderSide: BorderSide(
-              color:  borderColor ?? const Color(0xFF656872).withOpacity(0.0)
+              color:  borderColor ?? const Color(0xFF656872).withValues(alpha: 0.0)
             )
           )
         ),

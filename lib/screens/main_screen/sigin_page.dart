@@ -1,7 +1,9 @@
 import 'package:app_5/helper/navigation_helper.dart';
 import 'package:app_5/providers/api_provider.dart';
 import 'package:app_5/providers/connectivity_helper.dart';
+import 'package:app_5/providers/live_location_provider.dart';
 import 'package:app_5/screens/main_screen/forget_password_screen.dart';
+import 'package:app_5/screens/main_screen/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -169,7 +171,7 @@ class _LoginPageState extends State<LoginPage>{
                       Align(
                         alignment: Alignment.bottomRight,
                         child: InkWell(
-                          splashColor: Colors.transparent.withOpacity(0.1),
+                          splashColor: Colors.transparent.withValues(alpha: 0.1),
                           onTap: () {
                             Navigator.push(context, SideTransiion(screen: const ForgetPasswordScreen()));
                           },
@@ -201,7 +203,16 @@ class _LoginPageState extends State<LoginPage>{
                                 isLoading = true;
                               });
                               try {
-                                await provider.loginExecutive(context, loginData, size);
+                                await provider.loginExecutive(context, loginData, size).then((value) {
+                                  Future.delayed(Duration.zero, () {
+                                    final provider = Provider.of<LiverLocationProvider>(context, listen: false);
+                                    provider.connect();
+                                  }).then((value) {
+                                   Navigator.pushReplacement(context, SideTransiion(
+                                      screen: const HomeScreen(), 
+                                    ));
+                                  });
+                                },);
                               } catch (e) {
                                 print("Login failed: $e");
                               } finally{

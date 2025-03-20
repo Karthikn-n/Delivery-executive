@@ -57,7 +57,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent.withOpacity(0.0),
+        surfaceTintColor: Colors.transparent.withValues(alpha: 0.0),
         titleTextStyle: const TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,

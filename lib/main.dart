@@ -1,6 +1,7 @@
 import 'package:app_5/helper/sharedPreference_helper.dart';
 import 'package:app_5/providers/api_provider.dart';
 import 'package:app_5/providers/connectivity_helper.dart';
+import 'package:app_5/providers/live_location_provider.dart';
 import 'package:app_5/screens/main_screen/sigin_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +15,8 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ConnectivityService(),),
-        ChangeNotifierProvider(create: (_) => ApiProvider())
+        ChangeNotifierProvider(create: (_) => ApiProvider()),
+        ChangeNotifierProvider(create: (_) => LiverLocationProvider()),
       ],
       child: const MyApp()
     )
@@ -30,6 +32,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   SharedPreferences prefs = SharedpreferenceHelper.getInstance;
+
 
   // This widget is the root of your application.
   @override

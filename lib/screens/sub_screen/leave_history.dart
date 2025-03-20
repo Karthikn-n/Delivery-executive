@@ -32,7 +32,7 @@ class LeaveHistoryScreen extends StatelessWidget {
           ),
           centerTitle: true,
           backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent.withOpacity(0.0),
+          surfaceTintColor: Colors.transparent.withValues(alpha: 0.0),
           titleTextStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
@@ -228,7 +228,6 @@ class LeaveHistoryScreen extends StatelessWidget {
                                   const TextWidget(text: "Start date", fontSize: 14, fontWeight: FontWeight.w500),
                                   const SizedBox(height: 10,),
                                   ElevatedButton(
-                                    iconAlignment: IconAlignment.end,
                                     onPressed: () async {
                                       DateTime? editStartDate = await showDatePicker(
                                         context: context, 
@@ -245,10 +244,11 @@ class LeaveHistoryScreen extends StatelessWidget {
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
+                                      iconAlignment: IconAlignment.end,
                                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                                      backgroundColor: Colors.transparent.withOpacity(0.0),
-                                      shadowColor: Colors.transparent.withOpacity(0.0),
-                                      overlayColor: Colors.transparent.withOpacity(0.1),
+                                      backgroundColor: Colors.transparent.withValues(alpha: 0.0),
+                                      shadowColor: Colors.transparent.withValues(alpha: 0.0),
+                                      overlayColor: Colors.transparent.withValues(alpha: 0.1),
                                       shape: RoundedRectangleBorder(
                                         side: BorderSide(color:  Colors.grey.shade300),
                                         borderRadius: BorderRadius.circular(8)
@@ -286,7 +286,6 @@ class LeaveHistoryScreen extends StatelessWidget {
                                   const TextWidget(text: "End date", fontSize: 14, fontWeight: FontWeight.w500),
                                   const SizedBox(height: 10,),
                                   ElevatedButton(
-                                    iconAlignment: IconAlignment.end,
                                     onPressed: () async {
                                       DateTime? editEndTime = await showDatePicker(
                                         context: context, 
@@ -303,10 +302,11 @@ class LeaveHistoryScreen extends StatelessWidget {
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
+                                      iconAlignment: IconAlignment.end,
                                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                                      backgroundColor: Colors.transparent.withOpacity(0.0),
-                                      shadowColor: Colors.transparent.withOpacity(0.0),
-                                      overlayColor: Colors.transparent.withOpacity(0.1),
+                                      backgroundColor: Colors.transparent.withValues(alpha: 0.0),
+                                      shadowColor: Colors.transparent.withValues(alpha: 0.0),
+                                      overlayColor: Colors.transparent.withValues(alpha: 0.1),
                                       shape: RoundedRectangleBorder(
                                         side: BorderSide(color:Colors.grey.shade300),
                                         borderRadius: BorderRadius.circular(8)

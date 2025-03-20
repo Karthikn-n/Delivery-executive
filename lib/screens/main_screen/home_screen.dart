@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               centerTitle: true,
               floating: false,
               automaticallyImplyLeading: false,
-              surfaceTintColor: Colors.transparent.withOpacity(0.0),
+              surfaceTintColor: Colors.transparent.withValues(alpha: 0.0),
               flexibleSpace: FlexibleSpaceBar(
                 background: Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20),
@@ -185,12 +185,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   Padding(
                     padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
                     child: TabBar(
-                      overlayColor: WidgetStatePropertyAll(Colors.transparent.withOpacity(0.0)),
+                      overlayColor: WidgetStatePropertyAll(Colors.transparent.withValues(alpha: 0.0)),
                       controller: _tabController,
                       labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                       isScrollable: true,
-                      dividerColor: Colors.transparent.withOpacity(0.0),
-                      indicatorColor: Colors.transparent.withOpacity(0.0),
+                      dividerColor: Colors.transparent.withValues(alpha: 0.0),
+                      indicatorColor: Colors.transparent.withValues(alpha: 0.0),
                       tabAlignment: TabAlignment.start,
                       tabs: [
                         // SKU Pickuplist Tab

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:app_5/encrypt_decrypt.dart';
-import 'package:app_5/helper/navigation_helper.dart';
 import 'package:app_5/helper/sharedPreference_helper.dart';
 import 'package:app_5/model/customer_address_model.dart';
 import 'package:app_5/model/delivery_products_model.dart';
@@ -12,7 +11,6 @@ import 'package:app_5/model/products_model.dart';
 import 'package:app_5/model/sku_additional_pickup_model.dart';
 import 'package:app_5/model/sku_products_list_model.dart';
 import 'package:app_5/repository/app_repository.dart';
-import 'package:app_5/screens/main_screen/home_screen.dart';
 import 'package:app_5/screens/main_screen/sigin_page.dart';
 import 'package:app_5/service/api_service.dart';
 import 'package:app_5/widgets/common_widgets/snackbar_message.dart';
@@ -22,7 +20,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiProvider extends ChangeNotifier{
-  AppRepository apiRespository = AppRepository(ApiService(baseUrl: "https://maduraimarket.in/api"));
+  // AppRepository apiRespository = AppRepository(ApiService(baseUrl: "https://maduraimarket.in/api"));
+  AppRepository apiRespository = AppRepository(ApiService(baseUrl: "http://192.168.1.19/pasumanibhoomi-latest/public/api"));
   SharedPreferences prefs = SharedpreferenceHelper.getInstance;
   // Skupick up list API Data
   List<SkuProduct> skuPickList = [];
@@ -80,13 +79,9 @@ class ApiProvider extends ChangeNotifier{
     );
     if(response.statusCode == 200 && decodedResponse["message"] == "LoggedIn successfully") {
       ScaffoldMessenger.of(context).showSnackBar(loginMessgae).closed.then((value) async{
-        await getProfile().then((value) async {
-            Navigator.pushReplacement(context, SideTransiion(
-              screen: const HomeScreen(), 
-            ));
-          },);
+        await getProfile();
       },);
-      prefs.setString('executiveId', decodedResponse['deliveryexecutive_id'].toString());
+     await prefs.setString('executiveId', decodedResponse['deliveryexecutive_id'].toString());
     
     } else {
       ScaffoldMessenger.of(context).showSnackBar(loginMessgae);
@@ -312,8 +307,7 @@ class ApiProvider extends ChangeNotifier{
     notifyListeners();
   }
 
-
-   // Delete Leave
+  // Delete Leave
   Future<void> deleteLeave(int leaveId, Size size, int index, BuildContext context) async {
     Map<String, dynamic> deleteData = {"leave_id": leaveId};
     final response = await apiRespository.deleteLeave(deleteData);
@@ -376,7 +370,6 @@ class ApiProvider extends ChangeNotifier{
     notifyListeners();
   }
 
-
   // Delivery list Screen and Customer location APi
   Future<void> deliverListAPi() async {
     Map<String, dynamic> customerData = {
@@ -401,7 +394,6 @@ class ApiProvider extends ChangeNotifier{
     notifyListeners();
   }
 
- 
   // Get Customer Location
   Future<void> customerAddressList() async {
     Map<String, dynamic> userData = {
@@ -418,7 +410,6 @@ class ApiProvider extends ChangeNotifier{
     }
     notifyListeners();
   }
-
 
   void clearUserSession(BuildContext context){
      for (var i = 0; i < skuPickList.length; i++) {
@@ -490,10 +481,10 @@ class ApiProvider extends ChangeNotifier{
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.zero
                       ),
-                      backgroundColor: Colors.transparent.withOpacity(0.0),
-                      shadowColor: Colors.transparent.withOpacity(0.0),
+                      backgroundColor: Colors.transparent.withValues(alpha: 0.0),
+                      shadowColor: Colors.transparent.withValues(alpha: 0.0),
                       elevation: 0,
-                      overlayColor: Colors.transparent.withOpacity(0.1)
+                      overlayColor: Colors.transparent.withValues(alpha: 0.1)
                     ),
                     onPressed: () async{
                       Navigator.pop(context);
@@ -513,13 +504,13 @@ class ApiProvider extends ChangeNotifier{
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent.withOpacity(0.0),
-                      shadowColor: Colors.transparent.withOpacity(0.0),
+                      backgroundColor: Colors.transparent.withValues(alpha: 0.0),
+                      shadowColor: Colors.transparent.withValues(alpha: 0.0),
                       elevation: 0,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.zero
                       ),
-                      overlayColor: Colors.transparent.withOpacity(0.1)
+                      overlayColor: Colors.transparent.withValues(alpha: 0.1)
                     ),
                     onPressed: () {
                       Navigator.pop(context);
@@ -536,7 +527,6 @@ class ApiProvider extends ChangeNotifier{
     );
   
   }
-
 
   // Confirm Delete Leave
   void confirmDeleteLeave(BuildContext context, Size size, int leaveId, int index){
@@ -587,10 +577,10 @@ class ApiProvider extends ChangeNotifier{
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.zero
                       ),
-                      backgroundColor: Colors.transparent.withOpacity(0.0),
-                      shadowColor: Colors.transparent.withOpacity(0.0),
+                      backgroundColor: Colors.transparent.withValues(alpha: 0.0),
+                      shadowColor: Colors.transparent.withValues(alpha: 0.0),
                       elevation: 0,
-                      overlayColor: Colors.transparent.withOpacity(0.1)
+                      overlayColor: Colors.transparent.withValues(alpha: 0.1)
                     ),
                     onPressed: () async{
                       Navigator.pop(builderContext);
@@ -608,13 +598,13 @@ class ApiProvider extends ChangeNotifier{
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent.withOpacity(0.0),
-                      shadowColor: Colors.transparent.withOpacity(0.0),
+                      backgroundColor: Colors.transparent.withValues(alpha: 0.0),
+                      shadowColor: Colors.transparent.withValues(alpha: 0.0),
                       elevation: 0,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.zero
                       ),
-                      overlayColor: Colors.transparent.withOpacity(0.1)
+                      overlayColor: Colors.transparent.withValues(alpha: 0.1)
                     ),
                     onPressed: () {
                       Navigator.pop(builderContext);
@@ -641,7 +631,7 @@ class ApiProvider extends ChangeNotifier{
             borderRadius: BorderRadius.circular(10),
           ),
           elevation: 0,
-          // backgroundColor: Colors.transparent.withOpacity(0.1),
+          // backgroundColor: Colors.transparent.withValues(alpha: 0.1),
           child: SizedBox(
             height: size.height * 0.3,
             // width: size.width * 0.,
@@ -673,7 +663,4 @@ class ApiProvider extends ChangeNotifier{
     );
   }
 
-
-
-  
 }
