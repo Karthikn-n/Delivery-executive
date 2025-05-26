@@ -16,10 +16,12 @@ import 'package:app_5/screens/main_screen/sigin_page.dart';
 import 'package:app_5/service/api_service.dart';
 import 'package:app_5/service/background_service.dart';
 import 'package:app_5/service/firebase_service.dart';
+import 'package:app_5/service/notification_service.dart';
 import 'package:app_5/widgets/common_widgets/snackbar_message.dart';
 import 'package:app_5/widgets/common_widgets/text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 import 'package:app_5/helper/navigation_helper.dart';
 import 'package:app_5/screens/main_screen/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,6 +31,7 @@ class ApiProvider extends ChangeNotifier{
   // AppRepository apiRespository = AppRepository(ApiService(baseUrl: "http://192.168.1.19/pasumaibhoomi-latest/public/api"));
   SharedPreferences prefs = SharedpreferenceHelper.getInstance;
   final FirebaseService _firebaseService = FirebaseService();
+  final NotificationService _notificationService = NotificationService.instance;
   // Skupick up list API Data
   List<SkuProduct> skuPickList = [];
   List<ProductsModel> allProducts = [];
@@ -38,7 +41,8 @@ class ApiProvider extends ChangeNotifier{
   List<int> orderedProductsAdditionalQuantities = [];
   List<SkuAdditionalPickupModel> additionalPickupData = [];
   bool isPicking = false;
-
+  int _messageCount = 0;
+  String _token = "cBPTkNbZSZWYU0hmUSz9mR:APA91bF5g0rOLuS94qi2-VVk5P68Ri-GbY7WCL7o8qVtFPDYiNo9BmdjsKiPvPgxMWUtvtU6p8VT2BUPGH7l2q7Jx5dUIt-k5GswJpDnoQc9hr48gZ7ScLI";
   // Leaves Data
   List<LeavesModel> leavesList = [];
   bool notSet = false;
@@ -67,9 +71,38 @@ class ApiProvider extends ChangeNotifier{
     }
     notifyListeners();
   }
-
+  
   /// API CALLS ///
 
+   Future<void> sendPushMessage() async {
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.rnfirebase.io/messaging/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: constructFCMPayload(_token),
+      );
+      print('FCM request for device sent! ${response.body}');
+    } catch (e) {
+      print(e);
+    }
+  }
+  String constructFCMPayload(String? token) {
+    _messageCount++;
+    return jsonEncode({
+      'token': token,
+      'data': {
+        'via': 'FlutterFire Cloud Messaging!!!',
+        'count': _messageCount.toString(),
+      },
+      'notification': {
+        'title': 'Hello FlutterFire!',
+        'body': 'This notification (#$_messageCount) was created via FCM!',
+      },
+    });
+  }
   // Login Delivery executive
   Future<void> loginExecutive(BuildContext context,  Map<String, dynamic> loginData, Size size) async {
     final response = await apiRespository.login(loginData);
@@ -106,8 +139,8 @@ class ApiProvider extends ChangeNotifier{
     print("Logging : $logged");
     if(logged) {
       await getProfile();
-      await _firebaseService.sendLocationToFirebase();
-      await BackgroundService.initializeService();
+      // await _firebaseService.sendLocationToFirebase();
+      // await BackgroundService.initializeService();
       return true;
     }
     return false;
@@ -309,6 +342,7 @@ class ApiProvider extends ChangeNotifier{
       sidePadding: size.width * 0.08
     );
     if (response.statusCode == 200 && decodedReponse['status'] == "success") {
+      _notificationService.showNotifiation("Pickup list are updated", "Products picked", "Picked the products for delivery", "payload");
       ScaffoldMessenger.of(context).showSnackBar(pickupMessage).closed.then((value) {
         for (var i = 0; i < skuPickList.length; i++) {
           additonalSkuQuantities.addAll({skuPickList[i].productId: 0});

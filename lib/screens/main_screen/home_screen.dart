@@ -98,9 +98,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       PopupMenuItem(
                         child: const TextWidget(text: 'Logout', fontWeight: FontWeight.w500, fontSize: 13),
-                        onTap: () {
-                          provider.confirmLogout(context, size);
-                          
+                        onTap: () async {
+                          // provider.confirmLogout(context, size);
+                          await provider.sendPushMessage();
                         }
                       ),
                     ];

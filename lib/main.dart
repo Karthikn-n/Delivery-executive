@@ -21,9 +21,6 @@ void main() async {
   );
   await SharedpreferenceHelper.init();
   await BackgroundService.initializeNotificationChannel();
-  FirebaseService locationService = FirebaseService();
-  await locationService.sendLocationToFirebase();
-  await locationService.getFCMToken();
   runApp( 
     MultiProvider(
       providers: [
@@ -68,6 +65,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
     setState(() {
       isloggedIn = loggedIn;
     });
+    if(loggedIn){
+      FirebaseService locationService = FirebaseService();
+      await locationService.sendLocationToFirebase();
+      await locationService.getFCMToken();
+    }
   }
 
    @override
