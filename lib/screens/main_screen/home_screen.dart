@@ -151,24 +151,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                           const SizedBox(width: 15,),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Consumer<ApiProvider>(
-                                  builder: (context, provider, child) {
-                                    return GestureDetector(
-                                      onTap: () async {
-                                        await provider.deliverListAPi();
-                                      },
-                                      child: TextWidget(text: prefs.getString("executiveName") ?? "No User Name", fontWeight: FontWeight.w500, fontSize: 20, fontColor: Colors.white,maxLines: 1, textOverflow: TextOverflow.ellipsis,));
-                                  }
-                                ),
-                                const SizedBox(height: 3,),
-                                TextWidget(text: prefs.getString("executiveEmail") ?? "nouser@gmail.com", fontWeight: FontWeight.w400, fontSize: 14, fontColor: Colors.white, maxLines: 1, textOverflow: TextOverflow.ellipsis,),
-                                const SizedBox(height: 5,),
-                                TextWidget(text: prefs.getString("executiveMobile") ?? "11111 11111", fontWeight: FontWeight.w400, fontSize: 13, fontColor: Colors.white,),
-                              ],
+                            child: Consumer<ApiProvider>(
+                              builder: (context, provider, child) {
+                                return GestureDetector(
+                                  onTap: () async {
+                                    // await provider.deliverListAPi();
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      TextWidget(text: prefs.getString("executiveName") ?? "No User Name", fontWeight: FontWeight.w500, fontSize: 20, fontColor: Colors.white,maxLines: 1, textOverflow: TextOverflow.ellipsis,),
+                                      const SizedBox(height: 3,),
+                                      TextWidget(text: prefs.getString("executiveEmail") ?? "nouser@gmail.com", fontWeight: FontWeight.w400, fontSize: 14, fontColor: Colors.white, maxLines: 1, textOverflow: TextOverflow.ellipsis,),
+                                      const SizedBox(height: 5,),
+                                      TextWidget(text: prefs.getString("executiveMobile") ?? "11111 11111", fontWeight: FontWeight.w400, fontSize: 13, fontColor: Colors.white,),
+                                    ],
+                                  ));
+                              }
                             ),
                           ),
                         ],

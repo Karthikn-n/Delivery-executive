@@ -57,5 +57,9 @@ class AppRepository{
   // Update Delivery or Deliver the Products
   Future<http.Response> updateDelivery(Map<String, dynamic> body) async
     => await apiService.post('/updatedelivery', body);
+
+  // Update Delivery executive location
+  Future<http.Response> updateLocation(Map<String, dynamic> body) async
+    => await apiService.post('/updatelocation', body);
 }
 

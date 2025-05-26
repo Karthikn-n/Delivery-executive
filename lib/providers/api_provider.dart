@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:app_5/encrypt_decrypt.dart';
@@ -13,16 +14,21 @@ import 'package:app_5/model/sku_products_list_model.dart';
 import 'package:app_5/repository/app_repository.dart';
 import 'package:app_5/screens/main_screen/sigin_page.dart';
 import 'package:app_5/service/api_service.dart';
+import 'package:app_5/service/background_service.dart';
+import 'package:app_5/service/firebase_service.dart';
 import 'package:app_5/widgets/common_widgets/snackbar_message.dart';
 import 'package:app_5/widgets/common_widgets/text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:app_5/helper/navigation_helper.dart';
+import 'package:app_5/screens/main_screen/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiProvider extends ChangeNotifier{
-  // AppRepository apiRespository = AppRepository(ApiService(baseUrl: "https://maduraimarket.in/api"));
-  AppRepository apiRespository = AppRepository(ApiService(baseUrl: "http://192.168.1.19/pasumanibhoomi-latest/public/api"));
+  AppRepository apiRespository = AppRepository(ApiService(baseUrl: "https://maduraimarket.in/api"));
+  // AppRepository apiRespository = AppRepository(ApiService(baseUrl: "http://192.168.1.19/pasumaibhoomi-latest/public/api"));
   SharedPreferences prefs = SharedpreferenceHelper.getInstance;
+  final FirebaseService _firebaseService = FirebaseService();
   // Skupick up list API Data
   List<SkuProduct> skuPickList = [];
   List<ProductsModel> allProducts = [];
@@ -77,17 +83,34 @@ class ApiProvider extends ChangeNotifier{
       sidePadding: size.width * 0.1,
       bottomPadding:  size.height * 0.05
     );
-    if(response.statusCode == 200 && decodedResponse["message"] == "LoggedIn successfully") {
+    if(response.statusCode == 200 && decodedResponse["status"] == "success") {
       ScaffoldMessenger.of(context).showSnackBar(loginMessgae).closed.then((value) async{
         await getProfile();
+        await _firebaseService.sendLocationToFirebase();
+        await BackgroundService.initializeService();
       },);
-     await prefs.setString('executiveId', decodedResponse['deliveryexecutive_id'].toString());
-    
+      await prefs.setString('executiveId', decodedResponse['deliveryexecutive_id'].toString());
+      await prefs.setBool('${decodedResponse['deliveryexecutive_id']}isLogged', true);
+      print("Stored: ${prefs.getBool("${prefs.getString("executiveId")}isLogged")}");
+        Navigator.pushReplacement(context, SideTransiion(screen: const HomeScreen(), ));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(loginMessgae);
       print("Error: $decodedResponse");
     }
     notifyListeners();
+  }
+
+  Future<bool> isloggedIn() async {
+    print("Executive ID: ${prefs.getString('executiveId')}");
+    bool logged = prefs.getBool('${prefs.getString('executiveId')}isLogged') ?? false;
+    print("Logging : $logged");
+    if(logged) {
+      await getProfile();
+      await _firebaseService.sendLocationToFirebase();
+      await BackgroundService.initializeService();
+      return true;
+    }
+    return false;
   }
 
   // Forget password
@@ -127,6 +150,7 @@ class ApiProvider extends ChangeNotifier{
       prefs.setString('executiveName', decodedResponse['results']['name']);
       prefs.setString('executiveEmail', decodedResponse['results']['email']);
       prefs.setString('executiveMobile', decodedResponse['results']['mobile_no']);
+      notifyListeners();
     } else {
       print('Failed to fetch profile data. Status code: ${response.statusCode}');
     }
@@ -144,19 +168,32 @@ class ApiProvider extends ChangeNotifier{
     if(response.statusCode == 200){
 
       List<dynamic> responseList = decodedResponse['results'] as List;
-      
-
       List<dynamic> productsList = decodedResponse['product_list'] as List;
-
       List<dynamic> additionalProducts = decodedResponse['additional_order_products'] as List;
-     
-
         skuPickList.clear();
         allProducts.clear();
         orderedProducts.clear();
-        skuPickList = responseList.map((json) => SkuProduct.fromJson(json)).toList();
-        allProducts = productsList.map((map) => ProductsModel.fromMap(map)).toList();
-        orderedProducts = additionalProducts.map((map) => OrderedProductsModel.fromMap(map)).toList();
+        try {
+          skuPickList = responseList.map((json) {
+            try {
+              return SkuProduct.fromJson(json);
+            } catch (e, st) {
+              log("Error parsing skuproducts", error: e.toString(), stackTrace: st);
+              return null; 
+            }
+          }).whereType<SkuProduct>().toList();
+          allProducts = productsList.map((json){
+            try {
+              return ProductsModel.fromMap(json);
+            } catch (e, st) {
+              log("Error parsing products", error: e.toString(), stackTrace: st);
+              return null;
+            }
+          }).whereType<ProductsModel>().toList();
+          orderedProducts = additionalProducts.map((json) => OrderedProductsModel.fromMap(json)).toList();
+        } on Exception catch (e, st) {
+          log("Sku pickuplist log: ", error: e.toString, stackTrace: st);
+        }
         // skuPickList.addAll(tempList);
         // allProducts.addAll(products);
         // orderedProducts.addAll(additionalProductsList);
@@ -167,8 +204,6 @@ class ApiProvider extends ChangeNotifier{
           additionalProductQuantities.addAll({allProducts[i].id: 0});
         }
         orderedProductsAdditionalQuantities = List.generate(orderedProducts.length, (index) => 0,);
-    
-      
       prefs.setString('calledToday', DateTime(DateTime.now().day).toString());
     }
     notifyListeners();

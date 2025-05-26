@@ -1,7 +1,6 @@
 import 'package:app_5/helper/navigation_helper.dart';
 import 'package:app_5/providers/api_provider.dart';
 import 'package:app_5/providers/connectivity_helper.dart';
-import 'package:app_5/providers/live_location_provider.dart';
 import 'package:app_5/screens/main_screen/forget_password_screen.dart';
 import 'package:app_5/screens/main_screen/home_screen.dart';
 import 'package:flutter/material.dart';
@@ -203,16 +202,7 @@ class _LoginPageState extends State<LoginPage>{
                                 isLoading = true;
                               });
                               try {
-                                await provider.loginExecutive(context, loginData, size).then((value) {
-                                  Future.delayed(Duration.zero, () {
-                                    final provider = Provider.of<LiverLocationProvider>(context, listen: false);
-                                    provider.connect();
-                                  }).then((value) {
-                                   Navigator.pushReplacement(context, SideTransiion(
-                                      screen: const HomeScreen(), 
-                                    ));
-                                  });
-                                },);
+                                await provider.loginExecutive(context, loginData, size);
                               } catch (e) {
                                 print("Login failed: $e");
                               } finally{

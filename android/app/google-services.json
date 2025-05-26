@@ -1,0 +1,124 @@
+{
+  "project_info": {
+    "project_number": "650244784208",
+    "project_id": "embark-99c37",
+    "storage_bucket": "embark-99c37.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650244784208:android:12de1181c36542718b9155",
+        "android_client_info": {
+          "package_name": "com.example.app_3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhd-xJz-cZTnphEQM08WiCdC_MTbf014g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650244784208:android:afa8f079f0ef58568b9155",
+        "android_client_info": {
+          "package_name": "com.example.app_5"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhd-xJz-cZTnphEQM08WiCdC_MTbf014g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650244784208:android:ac329f4f5e6f23788b9155",
+        "android_client_info": {
+          "package_name": "com.example.lla"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhd-xJz-cZTnphEQM08WiCdC_MTbf014g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650244784208:android:134803a70e97b4208b9155",
+        "android_client_info": {
+          "package_name": "com.example.magic_alumni"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhd-xJz-cZTnphEQM08WiCdC_MTbf014g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650244784208:android:59681a60c6500a058b9155",
+        "android_client_info": {
+          "package_name": "com.example.teacherapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhd-xJz-cZTnphEQM08WiCdC_MTbf014g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650244784208:android:f07ab9227379460d8b9155",
+        "android_client_info": {
+          "package_name": "com.example.tech"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhd-xJz-cZTnphEQM08WiCdC_MTbf014g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

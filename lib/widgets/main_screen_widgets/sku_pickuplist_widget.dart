@@ -2,6 +2,7 @@ import 'package:app_5/helper/sharedPreference_helper.dart';
 import 'package:app_5/model/ordered_products_model.dart';
 import 'package:app_5/model/products_model.dart';
 import 'package:app_5/providers/api_provider.dart';
+import 'package:app_5/providers/live_location_provider.dart';
 import 'package:app_5/widgets/common_widgets/text_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -49,15 +50,18 @@ class SkuPickuplistWidget extends StatelessWidget {
   }
 
   Widget skuPickupList(Size size){
-    return Consumer<ApiProvider>(
-      builder: (context, provider, child) {
+    return Consumer2<ApiProvider, LiverLocationProvider>(
+      builder: (context, provider, location, child) {
         return  Stack(
           alignment: Alignment.center,
           children: [
             CupertinoScrollbar(
               controller: _scrollController,
               child: RefreshIndicator(
-                onRefresh: () async => await provider.skuListAPI(),
+                onRefresh: () async {
+                  await provider.skuListAPI();
+                  await location.connect();
+                },
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   child: Padding(
@@ -190,7 +194,8 @@ class SkuPickuplistWidget extends StatelessWidget {
                                                             child: Icon(
                                                               Icons.add, 
                                                               size: 15,
-                                                              color: provider.additonalSkuQuantities[product.productId]! >= 1 
+                                                              color:
+                                                               provider.additonalSkuQuantities[product.productId]! >= 1 
                                                               ? const Color(0xFF60B47B)
                                                               :  Colors.black,
                                                             ),

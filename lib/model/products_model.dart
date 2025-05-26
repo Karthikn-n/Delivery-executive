@@ -36,8 +36,8 @@ class ProductsModel{
       id: map["product_id"], 
       name: map["product_name"], 
       quantity: map["quantity"], 
-      price: map["price"], 
-      finalPrice: map["final_price"], 
+      price: int.tryParse(map["price"].toString()) ?? 0, 
+      finalPrice: int.tryParse(map["final_price"].toString()) ?? 0, 
       description: map["description"], 
       image: map["image"]
     );

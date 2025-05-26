@@ -1,16 +1,29 @@
+import 'package:app_5/firebase_options.dart';
 import 'package:app_5/helper/sharedPreference_helper.dart';
 import 'package:app_5/providers/api_provider.dart';
 import 'package:app_5/providers/connectivity_helper.dart';
 import 'package:app_5/providers/live_location_provider.dart';
+import 'package:app_5/screens/main_screen/home_screen.dart';
 import 'package:app_5/screens/main_screen/sigin_page.dart';
+import 'package:app_5/service/background_service.dart';
+import 'package:app_5/service/firebase_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+  );
   await SharedpreferenceHelper.init();
+  await BackgroundService.initializeNotificationChannel();
+  FirebaseService locationService = FirebaseService();
+  await locationService.sendLocationToFirebase();
+  await locationService.getFCMToken();
   runApp( 
     MultiProvider(
       providers: [
@@ -30,9 +43,44 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
   SharedPreferences prefs = SharedpreferenceHelper.getInstance;
+  final service = FlutterBackgroundService();
+  bool isloggedIn = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    checked();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void checked() async {
+    final provider = Provider.of<ApiProvider>(context, listen: false);
+    bool loggedIn = await provider.isloggedIn();
+    print("Delivery Logged $loggedIn");
+    setState(() {
+      isloggedIn = loggedIn;
+    });
+  }
+
+   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+   if (state == AppLifecycleState.paused) {
+      // App is in background -> Restart background service
+      bool isRunning = await service.isRunning();
+      if (!isRunning) {
+        service.startService();
+        print("🟢 Background service started as app is in background");
+      }
+    }
+  }
 
   // This widget is the root of your application.
   @override
@@ -71,9 +119,8 @@ class _MyAppState extends State<MyApp> {
         ),
         primaryColorDark: Colors.black,
         scaffoldBackgroundColor: Colors.white,
-        
       ),
-      home: const LoginPage()
+      home: isloggedIn ? const HomeScreen() : const LoginPage()
     );
   }
 }
